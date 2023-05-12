@@ -123,7 +123,7 @@ def _generate_subplots(all_results_df: pd.DataFrame, x_axis_metric: str,
       axes[i].plot(sorted_label_results[x_axis_metric],
                    sorted_label_results[str(privacy_metric)])
     axes[i].set_xlabel(x_axis_metric)
-    axes[i].set_title('%s for %s' % (privacy_metric, ENTIRE_DATASET_SLICE_STR))
+    axes[i].set_title(f'{privacy_metric} for {ENTIRE_DATASET_SLICE_STR}')
   plt.legend(legend_labels, loc='upper left', bbox_to_anchor=(1.02, 1))
   fig.tight_layout(rect=[0, 0, 1, 0.93])  # Leave space for suptitle.
 

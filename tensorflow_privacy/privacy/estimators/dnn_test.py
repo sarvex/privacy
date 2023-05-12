@@ -34,10 +34,9 @@ class DPDNNClassifierTest(tf.test.TestCase, parameterized.TestCase):
   )
   def testDNN(self, classes):
     train_features, train_labels = test_utils.make_input_data(256, classes)
-    feature_columns = []
-    for key in train_features:
-      feature_columns.append(tf.feature_column.numeric_column(key=key))
-
+    feature_columns = [
+        tf.feature_column.numeric_column(key=key) for key in train_features
+    ]
     optimizer = functools.partial(
         DPKerasSGDOptimizer,
         learning_rate=0.5,

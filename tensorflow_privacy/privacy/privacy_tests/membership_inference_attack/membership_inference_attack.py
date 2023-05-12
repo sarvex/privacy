@@ -40,9 +40,7 @@ from tensorflow_privacy.privacy.privacy_tests.membership_inference_attack.datase
 
 
 def _get_slice_spec(data: AttackInputData) -> SingleSliceSpec:
-  if hasattr(data, 'slice_spec'):
-    return data.slice_spec
-  return SingleSliceSpec()
+  return data.slice_spec if hasattr(data, 'slice_spec') else SingleSliceSpec()
 
 
 def _run_trained_attack(attack_input: AttackInputData,
@@ -60,8 +58,7 @@ def _run_trained_attack(attack_input: AttackInputData,
   elif attack_type == AttackType.K_NEAREST_NEIGHBORS:
     attacker = models.KNearestNeighborsAttacker()
   else:
-    raise NotImplementedError('Attack type %s not implemented yet.' %
-                              attack_type)
+    raise NotImplementedError(f'Attack type {attack_type} not implemented yet.')
 
   prepared_attacker_data = models.create_attacker_data(
       attack_input, balance=balance_attacker_training)
@@ -193,9 +190,7 @@ def run_attacks(attack_input: AttackInputData,
 
   if slicing_spec is None:
     slicing_spec = SlicingSpec(entire_dataset=True)
-  num_classes = None
-  if slicing_spec.by_class:
-    num_classes = attack_input.num_classes
+  num_classes = attack_input.num_classes if slicing_spec.by_class else None
   input_slice_specs = get_single_slice_specs(slicing_spec, num_classes)
   for single_slice_spec in input_slice_specs:
     attack_input_slice = get_slice(attack_input, single_slice_spec)
@@ -291,9 +286,7 @@ def run_membership_probability_analysis(
 
   if slicing_spec is None:
     slicing_spec = SlicingSpec(entire_dataset=True)
-  num_classes = None
-  if slicing_spec.by_class:
-    num_classes = attack_input.num_classes
+  num_classes = attack_input.num_classes if slicing_spec.by_class else None
   input_slice_specs = get_single_slice_specs(slicing_spec, num_classes)
   for single_slice_spec in input_slice_specs:
     attack_input_slice = get_slice(attack_input, single_slice_spec)

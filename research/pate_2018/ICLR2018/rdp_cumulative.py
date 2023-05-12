@@ -167,7 +167,7 @@ def print_plot_small(figures_dir, eps_lap, eps_gnmax, answered_gnmax):
     answered_gnmax: The cumulative count of queries answered.
   """
   xlim = 6000
-  x_axis = range(0, int(xlim), 10)
+  x_axis = range(0, xlim, 10)
   y_lap = np.zeros(len(x_axis), dtype=float)
   y_gnmax = np.full(len(x_axis), np.nan, dtype=float)
 
@@ -199,7 +199,7 @@ def print_plot_small(figures_dir, eps_lap, eps_gnmax, answered_gnmax):
   plt.legend(loc=2, fontsize=13)  # loc=2 -- upper left
   ax.tick_params(labelsize=14)
   fout_name = os.path.join(figures_dir, 'lnmax_vs_gnmax.pdf')
-  print('Saving the graph to ' + fout_name)
+  print(f'Saving the graph to {fout_name}')
   fig.savefig(fout_name, bbox_inches='tight')
   plt.show()
 
@@ -218,7 +218,7 @@ def print_plot_large(figures_dir, eps_lap, eps_gnmax1, answered_gnmax1,
     answered_gnmax2: The cumulative count of queries answered (set 2).
   """
   xlim = 6000
-  x_axis = range(0, int(xlim), 10)
+  x_axis = range(0, xlim, 10)
   lenx = len(x_axis)
   y_lap = np.zeros(lenx)
   y_gnmax1 = np.full(lenx, np.nan, dtype=float)
@@ -289,7 +289,7 @@ def print_plot_large(figures_dir, eps_lap, eps_gnmax1, answered_gnmax1,
   plt.legend(loc=2, fontsize=13)  # loc=2 -- upper left
   ax.tick_params(labelsize=14)
   fout_name = os.path.join(figures_dir, 'lnmax_vs_2xgnmax_large.pdf')
-  print('Saving the graph to ' + fout_name)
+  print(f'Saving the graph to {fout_name}')
   fig.savefig(fout_name, bbox_inches='tight')
   plt.show()
 
@@ -314,12 +314,12 @@ def run_all_analyses(votes, lambda_laplace, gnmax_parameters, sigma2):
   # print('=== Gaussian Mechanism (simple) ===')
   # eps, _, _, _ = run_analysis(votes[:n,], 'gnmax', sigma1, None)
 
-  eps_gnmax = [[] for p in gnmax_parameters]
-  partition_gmax = [[] for p in gnmax_parameters]
-  answered = [[] for p in gnmax_parameters]
-  order_opt = [[] for p in gnmax_parameters]
+  eps_gnmax = [[] for _ in gnmax_parameters]
+  partition_gmax = [[] for _ in gnmax_parameters]
+  answered = [[] for _ in gnmax_parameters]
+  order_opt = [[] for _ in gnmax_parameters]
   for i, p in enumerate(gnmax_parameters):
-    print('=== Gaussian Mechanism (confident) {}: ==='.format(p))
+    print(f'=== Gaussian Mechanism (confident) {p}: ===')
     eps_gnmax[i], partition_gmax[i], answered[i], order_opt[i] = run_analysis(
         votes, 'gnmax_conf', sigma2, p)
     print()
@@ -329,8 +329,6 @@ def run_all_analyses(votes, lambda_laplace, gnmax_parameters, sigma2):
 
 def main(argv):
   del argv  # Unused.
-  lambda_laplace = 50.  # corresponds to eps = 1. / lambda_laplace
-
   # Paramaters of the GNMax
   gnmax_parameters = ({
                         't': 1000,
@@ -342,28 +340,30 @@ def main(argv):
                         't': 5000,
                         'sigma1': 1500
                       })
-  sigma2 = 100  # GNMax parameters differ only in Step 1 (selection).
   ftemp_name = '/tmp/precomputed.pkl'
 
   figures_dir = os.path.expanduser(FLAGS.figures_dir)
 
   if FLAGS.cache and os.path.isfile(ftemp_name):
-    print('Reading from cache ' + ftemp_name)
+    print(f'Reading from cache {ftemp_name}')
     with open(ftemp_name, 'rb') as f:
       (eps_lap, eps_gnmax, partition_gmax, answered_gnmax,
        orders_opt_gnmax) = pickle.load(f)
   else:
     fin_name = os.path.expanduser(FLAGS.counts_file)
-    print('Reading raw votes from ' + fin_name)
+    print(f'Reading raw votes from {fin_name}')
     sys.stdout.flush()
 
     votes = np.load(fin_name)
 
+    lambda_laplace = 50.  # corresponds to eps = 1. / lambda_laplace
+
+    sigma2 = 100  # GNMax parameters differ only in Step 1 (selection).
     (eps_lap, eps_gnmax, partition_gmax,
      answered_gnmax, orders_opt_gnmax) = run_all_analyses(
         votes, lambda_laplace, gnmax_parameters, sigma2)
 
-    print('Writing to cache ' + ftemp_name)
+    print(f'Writing to cache {ftemp_name}')
     with open(ftemp_name, 'wb') as f:
       pickle.dump((eps_lap, eps_gnmax, partition_gmax, answered_gnmax,
                    orders_opt_gnmax), f)

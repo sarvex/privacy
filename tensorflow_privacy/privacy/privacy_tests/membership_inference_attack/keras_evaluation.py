@@ -135,7 +135,6 @@ def run_attack_on_keras_model(
       labels_train=in_train_labels, labels_test=out_train_labels,
       loss_train=in_train_loss, loss_test=out_train_loss
   )
-  results = mia.run_attacks(attack_input,
-                            slicing_spec=slicing_spec,
-                            attack_types=attack_types)
-  return results
+  return mia.run_attacks(attack_input,
+                         slicing_spec=slicing_spec,
+                         attack_types=attack_types)

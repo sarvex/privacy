@@ -34,7 +34,9 @@ def make_keras_optimizer_class(cls):
     A DP-SGD subclass of `cls`.
   """
 
-  class DPOptimizerClass(cls):  # pylint: disable=empty-docstring
+
+
+  class DPOptimizerClass(cls):# pylint: disable=empty-docstring
     __doc__ = """Differentially private subclass of class `{base_class}`.
 
     You can use this as a differentially private replacement for
@@ -115,9 +117,10 @@ def make_keras_optimizer_class(cls):
     of the optimizer. Thus user may have to adjust learning rate, weight decay
     and possibly other training hyperparameters accordingly.
     """.format(
-        base_class='tf.keras.optimizers.' + cls.__name__,
+        base_class=f'tf.keras.optimizers.{cls.__name__}',
         short_base_class=cls.__name__,
-        dp_keras_class='DPKeras' + cls.__name__)
+        dp_keras_class=f'DPKeras{cls.__name__}',
+    )
 
     # The class tf.keras.optimizers.Optimizer has two methods to compute
     # gradients, `_compute_gradients` and `get_gradients`. The first works
@@ -187,29 +190,29 @@ def make_keras_optimizer_class(cls):
             })
 
     def _resource_apply_dense(self, grad, var, apply_state=None):
-      if self.gradient_accumulation_steps > 1:
-        var_device, var_dtype = var.device, var.dtype.base_dtype
-        coefficients = ((apply_state or {}).get((var_device, var_dtype))
-                        or self._fallback_apply_state(var_device, var_dtype))
-        grad_acc = self.get_slot(var, 'grad_acc')
+      if self.gradient_accumulation_steps <= 1:
+        return super(DPOptimizerClass, self)._resource_apply_dense(
+            grad, var, apply_state)
 
-        def _update_grad():
-          apply_grad_op = super(DPOptimizerClass, self)._resource_apply_dense(
-              grad_acc + grad * coefficients['grad_scaler'], var, apply_state)
-          with tf.control_dependencies([apply_grad_op]):
-            return grad_acc.assign(tf.zeros_like(grad_acc),
+      var_device, var_dtype = var.device, var.dtype.base_dtype
+      coefficients = ((apply_state or {}).get((var_device, var_dtype))
+                      or self._fallback_apply_state(var_device, var_dtype))
+      grad_acc = self.get_slot(var, 'grad_acc')
+
+      def _update_grad():
+        apply_grad_op = super(DPOptimizerClass, self)._resource_apply_dense(
+            grad_acc + grad * coefficients['grad_scaler'], var, apply_state)
+        with tf.control_dependencies([apply_grad_op]):
+          return grad_acc.assign(tf.zeros_like(grad_acc),
+                                 use_locking=self._use_locking,
+                                 read_value=False)
+
+      def _accumulate():
+        return grad_acc.assign_add(grad * coefficients['grad_scaler'],
                                    use_locking=self._use_locking,
                                    read_value=False)
 
-        def _accumulate():
-          return grad_acc.assign_add(grad * coefficients['grad_scaler'],
-                                     use_locking=self._use_locking,
-                                     read_value=False)
-
-        return tf.cond(coefficients['apply_update'], _update_grad, _accumulate)
-      else:
-        return super(DPOptimizerClass, self)._resource_apply_dense(
-            grad, var, apply_state)
+      return tf.cond(coefficients['apply_update'], _update_grad, _accumulate)
 
     def _resource_apply_sparse_duplicate_indices(self, *args, **kwargs):
       if self.gradient_accumulation_steps > 1:
@@ -264,7 +267,7 @@ def make_keras_optimizer_class(cls):
       var_list = tf.nest.flatten(var_list)
 
       # Compute the per-microbatch losses using helpful jacobian method.
-      with tf.keras.backend.name_scope(self._name + '/gradients'):
+      with tf.keras.backend.name_scope(f'{self._name}/gradients'):
         jacobian = tape.jacobian(microbatch_losses, var_list)
 
         # Clip gradients to given l2_norm_clip.
@@ -342,6 +345,7 @@ def make_keras_optimizer_class(cls):
           'optimizer.')
       return super(DPOptimizerClass,
                    self).apply_gradients(grads_and_vars, global_step, name)
+
 
   return DPOptimizerClass
 

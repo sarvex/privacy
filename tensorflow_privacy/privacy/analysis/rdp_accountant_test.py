@@ -42,10 +42,7 @@ class TestGaussianMoments(tf.test.TestCase, parameterized.TestCase):
 
   def _log_float_mp(self, x):
     # Convert multi-precision input to float log space.
-    if x >= sys.float_info.min:
-      return float(log(x))
-    else:
-      return -np.inf
+    return float(log(x)) if x >= sys.float_info.min else -np.inf
 
   def _integral_mp(self, fn, bounds=(-inf, inf)):
     integral, _ = quad(fn, bounds, error=True, maxdegree=8)
@@ -75,8 +72,7 @@ class TestGaussianMoments(tf.test.TestCase, parameterized.TestCase):
     """Compute A_alpha for arbitrary alpha by numerical integration."""
     mu0, _ = self._distributions_mp(sigma, q)
     a_alpha_fn = lambda z: mu0(z) * self._mu_over_mu0(z, q, sigma)**alpha
-    a_alpha = self._integral_mp(a_alpha_fn)
-    return a_alpha
+    return self._integral_mp(a_alpha_fn)
 
   # TEST ROUTINES
   def test_compute_heterogeneous_rdp_different_sampling_probabilities(self):
@@ -162,7 +158,7 @@ class TestGaussianMoments(tf.test.TestCase, parameterized.TestCase):
   })
 
   # pylint:disable=undefined-variable
-  @parameterized.parameters(p for p in params)
+  @parameterized.parameters(iter(params))
   def test_compute_log_a_equals_mp(self, q, sigma, order):
     # Compare the cheap computation of log(A) with an expensive, multi-precision
     # computation.
@@ -172,7 +168,7 @@ class TestGaussianMoments(tf.test.TestCase, parameterized.TestCase):
 
   def test_get_privacy_spent_check_target_delta(self):
     orders = range(2, 33)
-    rdp = [1.1 for o in orders]  # Constant corresponds to pure DP.
+    rdp = [1.1 for _ in orders]
     eps, _, opt_order = rdp_accountant.get_privacy_spent(
         orders, rdp, target_delta=1e-5)
     # Since rdp is constant, it should always pick the largest order.
@@ -190,7 +186,7 @@ class TestGaussianMoments(tf.test.TestCase, parameterized.TestCase):
 
   def test_get_privacy_spent_check_target_eps(self):
     orders = range(2, 33)
-    rdp = [1.1 for o in orders]  # Constant corresponds to pure DP.
+    rdp = [1.1 for _ in orders]
     _, delta, opt_order = rdp_accountant.get_privacy_spent(
         orders, rdp, target_eps=1.32783806176)
     # Since rdp is constant, it should always pick the largest order.
@@ -257,10 +253,7 @@ class TestGaussianMoments(tf.test.TestCase, parameterized.TestCase):
 
       # Compute the "standard" upper bound, which should be an upper bound.
       # Note, if orders is too sparse, this will NOT be an upper bound.
-      if eps >= 0.5:
-        delta1 = math.exp(-0.5 * (eps - 0.5)**2)
-      else:
-        delta1 = 1
+      delta1 = math.exp(-0.5 * (eps - 0.5)**2) if eps >= 0.5 else 1
       self.assertLessEqual(delta, delta1 + 1e-300)
 
 

@@ -96,20 +96,19 @@ class GaussianNoiseGenerator(ValueGenerator):
     Returns:
       A named tuple of (seeds, stddev).
     """
-    if self._seed is None:
-      time_now = tf.timestamp()
-      residual = time_now - tf.math.floor(time_now)
-      return self._GlobalState(
-          tf.cast(
-              tf.stack([
-                  tf.math.floor(tf.timestamp() * 1e6),
-                  tf.math.floor(residual * 1e9)
-              ]),
-              dtype=tf.int64), tf.constant(self._noise_std, dtype=tf.float32))
-    else:
+    if self._seed is not None:
       return self._GlobalState(
           tf.constant(self._seed, dtype=tf.int64, shape=(2,)),
           tf.constant(self._noise_std, dtype=tf.float32))
+    time_now = tf.timestamp()
+    residual = time_now - tf.math.floor(time_now)
+    return self._GlobalState(
+        tf.cast(
+            tf.stack([
+                tf.math.floor(tf.timestamp() * 1e6),
+                tf.math.floor(residual * 1e9)
+            ]),
+            dtype=tf.int64), tf.constant(self._noise_std, dtype=tf.float32))
 
   def next(self, state):
     """Gets next value and advances the GaussianNoiseGenerator.

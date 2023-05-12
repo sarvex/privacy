@@ -32,8 +32,7 @@ def clip_gradients_vmap(g, l2_norm_clip):
   global_norm = tf.sqrt(tf.add_n(squared_l2_norms))
   div = tf.maximum(global_norm / l2_norm_clip, 1.)
   clipped_flat = [g / div for g in grads_flat]
-  clipped_grads = tf.nest.pack_sequence_as(g, clipped_flat)
-  return clipped_grads
+  return tf.nest.pack_sequence_as(g, clipped_flat)
 
 
 def make_vectorized_keras_optimizer_class(cls):
@@ -47,7 +46,9 @@ def make_vectorized_keras_optimizer_class(cls):
     A vectorized DP-SGD subclass of `cls`.
   """
 
-  class DPOptimizerClass(cls):  # pylint: disable=empty-docstring
+
+
+  class DPOptimizerClass(cls):# pylint: disable=empty-docstring
     __doc__ = """Vectorized differentially private subclass of given class
     `{base_class}`.
 
@@ -99,10 +100,12 @@ def make_vectorized_keras_optimizer_class(cls):
     model.fit(...)
     ```
 
-    """.format(base_class='tf.keras.optimizers.' + cls.__name__,
-               dp_keras_class='DPKeras' + cls.__name__,
-               short_base_class=cls.__name__,
-               dp_vectorized_keras_class='VectorizedDPKeras' + cls.__name__)
+    """.format(
+        base_class=f'tf.keras.optimizers.{cls.__name__}',
+        dp_keras_class=f'DPKeras{cls.__name__}',
+        short_base_class=cls.__name__,
+        dp_vectorized_keras_class=f'VectorizedDPKeras{cls.__name__}',
+    )
 
     def __init__(
         self,
@@ -166,7 +169,7 @@ def make_vectorized_keras_optimizer_class(cls):
       var_list = tf.nest.flatten(var_list)
 
       # Compute the per-microbatch losses using helpful jacobian method.
-      with tf.keras.backend.name_scope(self._name + '/gradients'):
+      with tf.keras.backend.name_scope(f'{self._name}/gradients'):
         jacobian = tape.jacobian(microbatch_losses, var_list)
 
         clipped_gradients = tf.vectorized_map(
@@ -241,6 +244,7 @@ def make_vectorized_keras_optimizer_class(cls):
           'optimizer.')
       return super(DPOptimizerClass,
                    self).apply_gradients(grads_and_vars, global_step, name)
+
 
   return DPOptimizerClass
 

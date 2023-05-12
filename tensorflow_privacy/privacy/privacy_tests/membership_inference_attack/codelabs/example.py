@@ -181,8 +181,8 @@ def main(unused_argv):
 
   # Print attack metrics
   for attack_result in attack_results.single_attack_results:
-    print("Slice: %s" % attack_result.slice_spec)
-    print("Attack type: %s" % attack_result.attack_type)
+    print(f"Slice: {attack_result.slice_spec}")
+    print(f"Attack type: {attack_result.attack_type}")
     print("AUC: %.2f" % attack_result.roc_curve.get_auc())
 
     print("Attacker advantage: %.2f\n" %

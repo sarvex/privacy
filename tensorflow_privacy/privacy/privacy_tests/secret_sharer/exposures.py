@@ -53,9 +53,10 @@ def compute_exposure_interpolation(
   # (repetitions_concat == 0).
   cum_sum = np.cumsum(repetitions_concat == 0)
   ranks = {r: cum_sum[repetitions_concat == r] + 1 for r in repetitions}
-  exposures = {r: np.log2(len(perplexities_reference)) - np.log2(ranks[r])
-               for r in repetitions}
-  return exposures
+  return {
+      r: np.log2(len(perplexities_reference)) - np.log2(ranks[r])
+      for r in repetitions
+  }
 
 
 def compute_exposure_extrapolation(
@@ -74,7 +75,7 @@ def compute_exposure_extrapolation(
   # Fit a skew normal distribution using the perplexities of the references
   snormal_param = skewnorm.fit(perplexities_reference)
 
-  # Estimate exposure using the fitted distribution
-  exposures = {r: -np.log2(skewnorm.cdf(perplexities[r], *snormal_param))
-               for r in perplexities.keys()}
-  return exposures
+  return {
+      r: -np.log2(skewnorm.cdf(perplexities[r], *snormal_param))
+      for r in perplexities
+  }

@@ -252,9 +252,9 @@ class QuantileAdaptiveClipSumQueryTest(tf.test.TestCase,
     for t in range(50):
       _, global_state = test_utils.run_query(query, records, global_state)
 
-      actual_clip = global_state.sum_state.l2_norm_clip
-
       if t > 40:
+        actual_clip = global_state.sum_state.l2_norm_clip
+
         self.assertNear(actual_clip, 5.0, 0.25)
 
   @parameterized.named_parameters(('start_low_arithmetic', True, False),
@@ -286,9 +286,9 @@ class QuantileAdaptiveClipSumQueryTest(tf.test.TestCase,
       tf.assign(learning_rate, 1.0 / np.sqrt(t + 1))
       _, global_state = test_utils.run_query(query, records, global_state)
 
-      actual_clip = global_state.sum_state.l2_norm_clip
-
       if t > 40:
+        actual_clip = global_state.sum_state.l2_norm_clip
+
         self.assertNear(actual_clip, 5.0, 0.5)
 
 

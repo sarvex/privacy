@@ -40,10 +40,6 @@ def accuracy(logits, labels):
   # Check against correct labels to compute correct guesses
   correct = np.sum(predicted_labels == labels.reshape(len(labels)))
 
-  # Divide by number of labels to obtain accuracy
-  accuracy = float(correct) / len(labels)
-
-  # Return float value
-  return accuracy
+  return float(correct) / len(labels)
 
 

@@ -37,23 +37,29 @@ def _make_quantile_estimator_query(initial_estimate,
                                    geometric_update,
                                    tree_aggregation=False):
   if expected_num_records is not None:
-    if tree_aggregation:
-      return quantile_estimator_query.TreeQuantileEstimatorQuery(
-          initial_estimate, target_quantile, learning_rate,
-          below_estimate_stddev, expected_num_records, geometric_update)
-    else:
-      return quantile_estimator_query.QuantileEstimatorQuery(
-          initial_estimate, target_quantile, learning_rate,
-          below_estimate_stddev, expected_num_records, geometric_update)
-  else:
-    if tree_aggregation:
-      raise ValueError(
-          'Cannot set expected_num_records to None for tree aggregation.')
-    return quantile_estimator_query.NoPrivacyQuantileEstimatorQuery(
+    return (quantile_estimator_query.TreeQuantileEstimatorQuery(
         initial_estimate,
         target_quantile,
         learning_rate,
-        geometric_update)
+        below_estimate_stddev,
+        expected_num_records,
+        geometric_update,
+    ) if tree_aggregation else quantile_estimator_query.QuantileEstimatorQuery(
+        initial_estimate,
+        target_quantile,
+        learning_rate,
+        below_estimate_stddev,
+        expected_num_records,
+        geometric_update,
+    ))
+  if tree_aggregation:
+    raise ValueError(
+        'Cannot set expected_num_records to None for tree aggregation.')
+  return quantile_estimator_query.NoPrivacyQuantileEstimatorQuery(
+      initial_estimate,
+      target_quantile,
+      learning_rate,
+      geometric_update)
 
 
 class QuantileEstimatorQueryTest(tf.test.TestCase, parameterized.TestCase):
@@ -224,9 +230,9 @@ class QuantileEstimatorQueryTest(tf.test.TestCase, parameterized.TestCase):
     for t in range(50):
       _, global_state = test_utils.run_query(query, records, global_state)
 
-      actual_estimate = global_state.current_estimate
-
       if t > 40:
+        actual_estimate = global_state.current_estimate
+
         self.assertNear(actual_estimate, 5.0, 0.25)
 
   @parameterized.named_parameters(
@@ -266,9 +272,9 @@ class QuantileEstimatorQueryTest(tf.test.TestCase, parameterized.TestCase):
       tf.assign(learning_rate, 1.0 / np.sqrt(t + 1))
       _, global_state = test_utils.run_query(query, records, global_state)
 
-      actual_estimate = global_state.current_estimate
-
       if t > 40:
+        actual_estimate = global_state.current_estimate
+
         self.assertNear(actual_estimate, 5.0, 0.5)
 
   def test_raises_with_non_scalar_record(self):

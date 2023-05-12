@@ -47,7 +47,9 @@ def make_optimizer_class(cls):
         'make_optimizer_class() does not interfere with overridden version.',
         cls.__name__)
 
-  class DPOptimizerClass(cls):  # pylint: disable=empty-docstring
+
+
+  class DPOptimizerClass(cls):# pylint: disable=empty-docstring
     __doc__ = ("""Differentially private subclass of `{base_class}`.
 
        You can use this as a differentially private replacement for
@@ -87,11 +89,12 @@ def make_optimizer_class(cls):
        ```
 
        """).format(
-           base_class='tf.compat.v1.train.' + cls.__name__,
-           gaussian_class='DP' +
-           cls.__name__.replace('Optimizer', 'GaussianOptimizer'),
-           short_base_class=cls.__name__,
-           dp_class='DP' + cls.__name__)
+        base_class=f'tf.compat.v1.train.{cls.__name__}',
+        gaussian_class='DP' +
+        cls.__name__.replace('Optimizer', 'GaussianOptimizer'),
+        short_base_class=cls.__name__,
+        dp_class=f'DP{cls.__name__}',
+    )
 
     def __init__(
         self,
@@ -270,6 +273,7 @@ def make_optimizer_class(cls):
       return super(DPOptimizerClass,
                    self).apply_gradients(grads_and_vars, global_step, name)
 
+
   return DPOptimizerClass
 
 
@@ -284,7 +288,9 @@ def make_gaussian_optimizer_class(cls):
     A subclass of `cls` using DP-SGD with Gaussian averaging.
   """
 
-  class DPGaussianOptimizerClass(make_optimizer_class(cls)):  # pylint: disable=empty-docstring
+
+
+  class DPGaussianOptimizerClass((make_optimizer_class(cls))):# pylint: disable=empty-docstring
     __doc__ = ("""DP subclass of `{}`.
 
        You can use this as a differentially private replacement for 
@@ -316,8 +322,11 @@ def make_gaussian_optimizer_class(cls):
        ```
 
        """).format(
-           'tf.compat.v1.train.' + cls.__name__, cls.__name__, cls.__name__,
-           'DP' + cls.__name__.replace('Optimizer', 'GaussianOptimizer'))
+        f'tf.compat.v1.train.{cls.__name__}',
+        cls.__name__,
+        cls.__name__,
+        'DP' + cls.__name__.replace('Optimizer', 'GaussianOptimizer'),
+    )
 
     def __init__(
         self,
@@ -372,6 +381,7 @@ def make_gaussian_optimizer_class(cls):
       })
 
       return config
+
 
   return DPGaussianOptimizerClass
 

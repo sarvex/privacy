@@ -33,9 +33,7 @@ def get_cnn_model(features):
   y = tf.keras.layers.MaxPool2D(2, 1).apply(y)
   y = tf.keras.layers.Flatten().apply(y)
   y = tf.keras.layers.Dense(32, activation='relu').apply(y)
-  logits = tf.keras.layers.Dense(10).apply(y)
-
-  return logits
+  return tf.keras.layers.Dense(10).apply(y)
 
 
 def make_input_fn(split, input_batch_size=256, repetitions=-1, tpu=False):

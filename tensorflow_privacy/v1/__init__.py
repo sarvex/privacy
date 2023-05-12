@@ -17,6 +17,7 @@ This module includes classes designed to be compatible with TF1, based on
 `tf.compat.v1.train.Optimizer` and `tf.estimator.Estimator`.
 """
 
+
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -25,9 +26,7 @@ import sys
 
 # pylint: disable=g-import-not-at-top
 
-if hasattr(sys, 'skip_tf_privacy_import'):  # Useful for standalone scripts.
-  pass
-else:
+if not hasattr(sys, 'skip_tf_privacy_import'):
   # Estimators
   from tensorflow_privacy.privacy.estimators.v1.dnn import DNNClassifier as DNNClassifierV1
 

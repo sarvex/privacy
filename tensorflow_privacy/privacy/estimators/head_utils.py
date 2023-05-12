@@ -46,15 +46,13 @@ def binary_or_multi_class_head(n_classes, weight_column, label_vocabulary,
   Returns:
     A `Head` instance.
   """
-  if n_classes == 2:
-    head = DPBinaryClassHead(
-        weight_column=weight_column,
-        label_vocabulary=label_vocabulary,
-        loss_reduction=loss_reduction)
-  else:
-    head = DPMultiClassHead(
-        n_classes,
-        weight_column=weight_column,
-        label_vocabulary=label_vocabulary,
-        loss_reduction=loss_reduction)
-  return head
+  return (DPBinaryClassHead(
+      weight_column=weight_column,
+      label_vocabulary=label_vocabulary,
+      loss_reduction=loss_reduction,
+  ) if n_classes == 2 else DPMultiClassHead(
+      n_classes,
+      weight_column=weight_column,
+      label_vocabulary=label_vocabulary,
+      loss_reduction=loss_reduction,
+  ))

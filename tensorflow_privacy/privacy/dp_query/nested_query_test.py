@@ -106,10 +106,9 @@ class NestedQueryTest(tf.test.TestCase, parameterized.TestCase):
 
       query_result, _ = test_utils.run_query(query, [record1, record2])
 
-      noised_averages = []
-      for _ in range(1000):
-        noised_averages.append(tf.nest.flatten(sess.run(query_result)))
-
+      noised_averages = [
+          tf.nest.flatten(sess.run(query_result)) for _ in range(1000)
+      ]
       result_stddev = np.std(noised_averages, 0)
       avg_stddev = stddev / denominator
       expected_stddev = [stddev, avg_stddev, avg_stddev]

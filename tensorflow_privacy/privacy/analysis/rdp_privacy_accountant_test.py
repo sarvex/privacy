@@ -36,10 +36,7 @@ def _get_test_rdp(event, count=1):
 
 def _log_float_mp(x):
   # Convert multi-precision input to float log space.
-  if x >= sys.float_info.min:
-    return float(mpmath.log(x))
-  else:
-    return -np.inf
+  return float(mpmath.log(x)) if x >= sys.float_info.min else -np.inf
 
 
 def _compute_a_mp(sigma, q, alpha):
@@ -235,7 +232,7 @@ class RdpPrivacyAccountantTest(privacy_accountant_test.PrivacyAccountantTest,
 
   def test_compute_epsilon_delta_pure_dp(self):
     orders = range(2, 33)
-    rdp = [1.1 for o in orders]  # Constant corresponds to pure DP.
+    rdp = [1.1 for _ in orders]
 
     epsilon = rdp_privacy_accountant._compute_epsilon(orders, rdp, delta=1e-5)
     # Compare with epsilon computed by hand.
@@ -301,7 +298,7 @@ class RdpPrivacyAccountantTest(privacy_accountant_test.PrivacyAccountantTest,
   })
 
   # pylint:disable=undefined-variable
-  @parameterized.parameters(p for p in params)
+  @parameterized.parameters(iter(params))
   def test_compute_log_a_equals_mp(self, q, sigma, order):
     # Compare the cheap computation of log(A) with an expensive, multi-precision
     # computation.
@@ -326,10 +323,7 @@ class RdpPrivacyAccountantTest(privacy_accountant_test.PrivacyAccountantTest,
 
       # Compute the "standard" upper bound, which should be an upper bound.
       # Note, if orders is too sparse, this will NOT be an upper bound.
-      if eps >= 0.5:
-        delta1 = math.exp(-0.5 * (eps - 0.5)**2)
-      else:
-        delta1 = 1
+      delta1 = math.exp(-0.5 * (eps - 0.5)**2) if eps >= 0.5 else 1
       self.assertLessEqual(delta, delta1 + 1e-300)
 
   def test_epsilon_delta_consistency(self):

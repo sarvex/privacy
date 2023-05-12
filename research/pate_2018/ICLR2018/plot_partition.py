@@ -264,7 +264,7 @@ def plot_comparison(figures_dir, simple_ind, conf_ind, simple_dep, conf_dep):
 
   ax.tick_params(labelsize=14)
   plot_filename = os.path.join(figures_dir, 'comparison.pdf')
-  print('Saving the graph to ' + plot_filename)
+  print(f'Saving the graph to {plot_filename}')
   fig.savefig(plot_filename, bbox_inches='tight')
   plt.show()
 
@@ -282,7 +282,7 @@ def plot_partition(figures_dir, gnmax_conf, print_order):
   eps_partitioned, answered, ss_std_opt, order_opt = gnmax_conf
 
   xlim = 10000
-  x = range(0, int(xlim), 10)
+  x = range(0, xlim, 10)
   lenx = len(x)
   y0 = np.full(lenx, np.nan, dtype=float)  # delta
   y1 = np.full(lenx, np.nan, dtype=float)  # delta + step1
@@ -344,7 +344,7 @@ def plot_partition(figures_dir, gnmax_conf, print_order):
 
   ax.tick_params(labelsize=14)
   plot_filename = os.path.join(figures_dir, 'partition.pdf')
-  print('Saving the graph to ' + plot_filename)
+  print(f'Saving the graph to {plot_filename}')
   fig.savefig(plot_filename, bbox_inches='tight', dpi=800)
   plt.show()
 
@@ -369,27 +369,27 @@ def run_or_load_all_analyses():
   temp_filename = os.path.expanduser('~/tmp/partition_cached.pkl')
 
   if FLAGS.cache and os.path.isfile(temp_filename):
-    print('Reading from cache ' + temp_filename)
+    print(f'Reading from cache {temp_filename}')
     with open(temp_filename, 'rb') as f:
       all_analyses = pickle.load(f)
   else:
     fin_name = os.path.expanduser(FLAGS.counts_file)
-    print('Reading raw votes from ' + fin_name)
+    print(f'Reading raw votes from {fin_name}')
     sys.stdout.flush()
 
     votes = np.load(fin_name)
 
     if FLAGS.queries is not None:
       if votes.shape[0] < FLAGS.queries:
-        raise ValueError('Expect {} rows, got {} in {}'.format(
-            FLAGS.queries, votes.shape[0], fin_name))
+        raise ValueError(
+            f'Expect {FLAGS.queries} rows, got {votes.shape[0]} in {fin_name}')
       # Truncate the votes matrix to the number of queries made.
       votes = votes[:FLAGS.queries, ]
 
     all_analyses = run_all_analyses(votes, FLAGS.threshold, FLAGS.sigma1,
                                     FLAGS.sigma2, FLAGS.delta)
 
-    print('Writing to cache ' + temp_filename)
+    print(f'Writing to cache {temp_filename}')
     with open(temp_filename, 'wb') as f:
       pickle.dump(all_analyses, f)
 

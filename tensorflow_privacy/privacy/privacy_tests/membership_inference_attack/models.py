@@ -107,9 +107,7 @@ def _column_stack(logits, loss):
   """
   if logits is None:
     return np.expand_dims(loss, axis=-1)
-  if loss is None:
-    return logits
-  return np.column_stack((logits, loss))
+  return logits if loss is None else np.column_stack((logits, loss))
 
 
 class TrainedAttacker:

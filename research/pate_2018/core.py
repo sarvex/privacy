@@ -189,10 +189,7 @@ def rdp_gaussian(logq, sigma, orders):
 
   assert np.all(ret >= 0)
 
-  if np.isscalar(orders):
-    return np.asscalar(ret)
-  else:
-    return ret
+  return np.asscalar(ret) if np.isscalar(orders) else ret
 
 
 def is_data_independent_always_opt_gaussian(num_teachers, num_classes, sigma,
@@ -356,10 +353,7 @@ def rdp_pure_eps(logq, pure_eps, orders):
   ret = np.minimum(
       np.minimum(0.5 * pure_eps * pure_eps * orders_vec,
                  log_t / (orders_vec - 1)), pure_eps)
-  if np.isscalar(orders):
-    return np.asscalar(ret)
-  else:
-    return ret
+  return np.asscalar(ret) if np.isscalar(orders) else ret
 
 
 def main(argv):

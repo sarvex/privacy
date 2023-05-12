@@ -244,34 +244,35 @@ def _find_optimal_smooth_sensitivity_parameters(
 
 def _load_votes(counts_file, baseline_file, queries):
   counts_file_expanded = os.path.expanduser(counts_file)
-  print('Reading raw votes from ' + counts_file_expanded)
+  print(f'Reading raw votes from {counts_file_expanded}')
   sys.stdout.flush()
 
   votes = np.load(counts_file_expanded)
-  print('Shape of the votes matrix = {}'.format(votes.shape))
+  print(f'Shape of the votes matrix = {votes.shape}')
 
   if baseline_file is not None:
     baseline_file_expanded = os.path.expanduser(baseline_file)
-    print('Reading baseline values from ' + baseline_file_expanded)
+    print(f'Reading baseline values from {baseline_file_expanded}')
     sys.stdout.flush()
     baseline = np.load(baseline_file_expanded)
     if votes.shape != baseline.shape:
       raise ValueError(
-          'Counts file and baseline file must have the same shape. Got {} and '
-          '{} instead.'.format(votes.shape, baseline.shape))
+          f'Counts file and baseline file must have the same shape. Got {votes.shape} and {baseline.shape} instead.'
+      )
   else:
     baseline = np.zeros_like(votes)
 
   if queries is not None:
     if votes.shape[0] < queries:
-      raise ValueError('Expect {} rows, got {} in {}'.format(
-          queries, votes.shape[0], counts_file))
+      raise ValueError(
+          f'Expect {queries} rows, got {votes.shape[0]} in {counts_file}')
     # Truncate the votes matrix to the number of queries made.
     votes = votes[:queries,]
     baseline = baseline[:queries,]
   else:
-    print('Process all {} input rows. (Use --queries flag to truncate.)'.format(
-        votes.shape[0]))
+    print(
+        f'Process all {votes.shape[0]} input rows. (Use --queries flag to truncate.)'
+    )
 
   return votes, baseline
 

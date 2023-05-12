@@ -89,11 +89,7 @@ def inference(images, dropout=False):
   Returns:
     Logits
   """
-  if FLAGS.dataset == 'mnist':
-    first_conv_shape = [5, 5, 1, 64]
-  else:
-    first_conv_shape = [5, 5, 3, 64]
-
+  first_conv_shape = [5, 5, 1, 64] if FLAGS.dataset == 'mnist' else [5, 5, 3, 64]
   # conv1
   with tf.variable_scope('conv1') as scope:
     kernel = _variable_with_weight_decay('weights',
@@ -199,11 +195,7 @@ def inference_deeper(images, dropout=False):
   Returns:
     Logits
   """
-  if FLAGS.dataset == 'mnist':
-    first_conv_shape = [3, 3, 1, 96]
-  else:
-    first_conv_shape = [3, 3, 3, 96]
-
+  first_conv_shape = [3, 3, 1, 96] if FLAGS.dataset == 'mnist' else [3, 3, 3, 96]
   # conv1
   with tf.variable_scope('conv1') as scope:
     kernel = _variable_with_weight_decay('weights',
@@ -367,9 +359,7 @@ def moving_av(total_loss):
   # Compute the moving average of all individual losses and the total loss.
   loss_averages = tf.train.ExponentialMovingAverage(0.9, name='avg')
   losses = tf.get_collection('losses')
-  loss_averages_op = loss_averages.apply(losses + [total_loss])
-
-  return loss_averages_op
+  return loss_averages.apply(losses + [total_loss])
 
 
 def train_op_fun(total_loss, global_step):
@@ -566,13 +556,7 @@ def softmax_preds(images, ckpt_path, return_logits=False):
   else:
     logits = inference(train_data_node)
 
-  if return_logits:
-    # We are returning the logits directly (no need to apply softmax)
-    output = logits
-  else:
-    # Add softmax predictions to graph: will return probabilities
-    output = tf.nn.softmax(logits)
-
+  output = logits if return_logits else tf.nn.softmax(logits)
   # Restore the moving average version of the learned variables for eval.
   variable_averages = tf.train.ExponentialMovingAverage(MOVING_AVERAGE_DECAY)
   variables_to_restore = variable_averages.variables_to_restore()

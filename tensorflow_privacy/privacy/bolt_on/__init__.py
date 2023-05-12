@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """BoltOn Method for privacy."""
+
 import sys
 from distutils.version import LooseVersion
 import tensorflow.compat.v1 as tf
@@ -20,9 +21,7 @@ if LooseVersion(tf.__version__) < LooseVersion("2.0.0"):
   raise ImportError("Please upgrade your version "
                     "of tensorflow from: {0} to at least 2.0.0 to "
                     "use privacy/bolt_on".format(LooseVersion(tf.__version__)))
-if hasattr(sys, "skip_tf_privacy_import"):  # Useful for standalone scripts.
-  pass
-else:
+if not hasattr(sys, "skip_tf_privacy_import"):
   from tensorflow_privacy.privacy.bolt_on.models import BoltOnModel  # pylint: disable=g-import-not-at-top
   from tensorflow_privacy.privacy.bolt_on.optimizers import BoltOn  # pylint: disable=g-import-not-at-top
   from tensorflow_privacy.privacy.bolt_on.losses import StrongConvexHuber  # pylint: disable=g-import-not-at-top

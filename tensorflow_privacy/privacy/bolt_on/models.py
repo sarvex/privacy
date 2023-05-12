@@ -253,9 +253,8 @@ class BoltOnModel(Model):  # pylint: disable=abstract-method
     Returns:
       class_weights as 1D tensor, to be passed to model's fit method.
     """
-    # Value checking
-    class_keys = ['balanced']
     is_string = False
+    class_keys = ['balanced']
     if isinstance(class_weights, str):
       is_string = True
       if class_weights not in class_keys:
@@ -265,8 +264,9 @@ class BoltOnModel(Model):  # pylint: disable=abstract-method
                          'or pass an array'.format(class_weights,
                                                    class_keys))
       if class_counts is None:
-        raise ValueError('Class counts must be provided if using '
-                         'class_weights=%s' % class_weights)
+        raise ValueError(
+            f'Class counts must be provided if using class_weights={class_weights}'
+        )
       class_counts_shape = tf.Variable(class_counts,
                                        trainable=False,
                                        dtype=self._dtype).shape
@@ -274,8 +274,9 @@ class BoltOnModel(Model):  # pylint: disable=abstract-method
         raise ValueError('class counts must be a 1D array.'
                          'Detected: {0}'.format(class_counts_shape))
       if num_classes is None:
-        raise ValueError('num_classes must be provided if using '
-                         'class_weights=%s' % class_weights)
+        raise ValueError(
+            f'num_classes must be provided if using class_weights={class_weights}'
+        )
     elif class_weights is not None:
       if num_classes is None:
         raise ValueError('You must pass a value for num_classes if '
@@ -289,7 +290,7 @@ class BoltOnModel(Model):  # pylint: disable=abstract-method
                                                         class_counts),
                                        self._dtype)
       class_weights = tf.Variable(num_samples, dtype=self._dtype) / \
-                      tf.Variable(weighted_counts, dtype=self._dtype)
+                        tf.Variable(weighted_counts, dtype=self._dtype)
     else:
       class_weights = _ops.convert_to_tensor_v2(class_weights)
       if len(class_weights.shape) != 1:

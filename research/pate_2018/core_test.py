@@ -85,12 +85,11 @@ class PateTest(unittest.TestCase):
     sigmas = [1e-3, 1.0, 1e5]
     deltas = [1e-60, 1e-6, 0.1, 0.999]
     for sigma in sigmas:
-      list_of_eps = []
       rdps_for_gaussian = np.array(orders) / (2 * sigma**2)
-      for delta in deltas:
-        list_of_eps.append(
-            pate.compute_eps_from_delta(orders, rdps_for_gaussian, delta)[0])
-
+      list_of_eps = [
+          pate.compute_eps_from_delta(orders, rdps_for_gaussian, delta)[0]
+          for delta in deltas
+      ]
       # Check that in list_of_eps, epsilons are decreasing (as delta increases).
       sorted_list_of_eps = list(list_of_eps)
       sorted_list_of_eps.sort(reverse=True)
@@ -102,9 +101,7 @@ class PateTest(unittest.TestCase):
     sigma = 15
     order = 250
     logqs = np.arange(-290, -270, 1)
-    count = 0
-    for logq in logqs:
-      count += 1
+    for count, logq in enumerate(logqs, start=1):
       sys.stdout.write("\t%0.5g: %0.10g" %
                        (logq, pate.rdp_gaussian(logq, sigma, order)))
       sys.stdout.flush()

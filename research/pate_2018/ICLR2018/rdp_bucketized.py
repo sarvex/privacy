@@ -114,7 +114,7 @@ def compute_privacy_cost_per_bins(bin_num, votes, sigma2, order):
     bin_counts[bin_idx] += 1
     bin_rdp[bin_idx] += rdp_at_order
     if (i + 1) % 1000 == 0:
-      print('example {}'.format(i + 1))
+      print(f'example {i + 1}')
       sys.stdout.flush()
 
   return bin_rdp / bin_counts
@@ -144,7 +144,7 @@ def compute_expected_answered_per_bin(bin_num, votes, threshold, sigma1):
     assert 0 <= bin_idx < bin_num
     bin_answered[bin_idx] += p
     if (i + 1) % 1000 == 0:
-      print('example {}'.format(i + 1))
+      print(f'example {i + 1}')
       sys.stdout.flush()
 
   return bin_answered
@@ -153,7 +153,7 @@ def compute_expected_answered_per_bin(bin_num, votes, threshold, sigma1):
 def main(argv):
   del argv  # Unused.
   fin_name = os.path.expanduser(FLAGS.counts_file)
-  print('Reading raw votes from ' + fin_name)
+  print(f'Reading raw votes from {fin_name}')
   sys.stdout.flush()
 
   votes = np.load(fin_name)
@@ -248,14 +248,14 @@ def main(argv):
   ax.set_xlabel('Percentage of teachers that agree', fontsize=16)
   ax.set_ylabel('Number of queries answered', fontsize=16)
   vals = ax.get_xticks()
-  ax.set_xticklabels([str(int(x)) + '%' for x in vals])
+  ax.set_xticklabels([f'{int(x)}%' for x in vals])
   ax.tick_params(labelsize=14, bottom=True, top=True, left=True, right=True)
   ax.legend(loc=2, prop={'size': 16})
 
   # simple: 'figures/noisy_thresholding_check_perf.pdf')
   # detailed: 'figures/noisy_thresholding_check_perf_details.pdf'
 
-  print('Saving the graph to ' + FLAGS.plot_file)
+  print(f'Saving the graph to {FLAGS.plot_file}')
   plt.savefig(os.path.expanduser(FLAGS.plot_file), bbox_inches='tight')
   plt.show()
 

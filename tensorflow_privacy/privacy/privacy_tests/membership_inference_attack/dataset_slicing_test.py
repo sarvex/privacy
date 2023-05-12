@@ -33,10 +33,7 @@ def _are_all_fields_equal(lhs, rhs) -> bool:
 def _are_lists_equal(lhs, rhs) -> bool:
   if len(lhs) != len(rhs):
     return False
-  for l, r in zip(lhs, rhs):
-    if not _are_all_fields_equal(l, r):
-      return False
-  return True
+  return all(_are_all_fields_equal(l, r) for l, r in zip(lhs, rhs))
 
 
 class SingleSliceSpecsTest(absltest.TestCase):
@@ -89,8 +86,7 @@ class SingleSliceSpecsTest(absltest.TestCase):
         by_percentiles=True,
         by_classification_correctness=True)
     n_classes = 10
-    expected_slices = n_classes
-    expected_slices += 1  # entire dataset slice
+    expected_slices = n_classes + 1
     expected_slices += 10  # percentiles slices
     expected_slices += 2  # correcness classification slices
     output = get_single_slice_specs(input_data, n_classes)

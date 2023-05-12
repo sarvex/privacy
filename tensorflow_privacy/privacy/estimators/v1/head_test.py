@@ -59,10 +59,9 @@ class DPHeadTest(tf.test.TestCase, parameterized.TestCase):
     """Tests that an Estimator built with a binary head works."""
 
     train_features, train_labels = test_utils.make_input_data(256, n_classes)
-    feature_columns = []
-    for key in train_features:
-      feature_columns.append(tf.feature_column.numeric_column(key=key))
-
+    feature_columns = [
+        tf.feature_column.numeric_column(key=key) for key in train_features
+    ]
     head = head_lib._binary_logistic_or_multi_class_head(
         n_classes=n_classes,
         weight_column=None,

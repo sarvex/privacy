@@ -90,15 +90,7 @@ def noisy_max(logits, lap_scale, return_clean_votes=False):
   # Cast labels to np.int32 for compatibility with deep_cnn.py feed dictionaries
   result = np.asarray(result, dtype=np.int32)
 
-  if return_clean_votes:
-    # Returns several array, which are later saved:
-    # result: labels obtained from the noisy aggregation
-    # clean_votes: the number of teacher votes assigned to each sample and class
-    # labels: the labels assigned by teachers (before the noisy aggregation)
-    return result, clean_votes, labels
-  else:
-    # Only return labels resulting from noisy aggregation
-    return result
+  return (result, clean_votes, labels) if return_clean_votes else result
 
 
 def aggregation_most_frequent(logits):

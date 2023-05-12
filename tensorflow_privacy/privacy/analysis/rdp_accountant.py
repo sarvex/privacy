@@ -56,10 +56,7 @@ import six
 def _log_add(logx, logy):
   """Add two numbers in the log space."""
   a, b = min(logx, logy), max(logx, logy)
-  if a == -np.inf:  # adding 0
-    return b
-  # Use exp(a) + exp(b) = (exp(a - b) + 1) * exp(b)
-  return math.log1p(math.exp(a - b)) + b  # log1p(x) = log(x + 1)
+  return b if a == -np.inf else math.log1p(math.exp(a - b)) + b
 
 
 def _log_sub(logx, logy):
@@ -96,9 +93,9 @@ def _log_sub_sign(logx, logy):
 def _log_print(logx):
   """Pretty print."""
   if logx < math.log(sys.float_info.max):
-    return "{}".format(math.exp(logx))
+    return f"{math.exp(logx)}"
   else:
-    return "exp({})".format(logx)
+    return f"exp({logx})"
 
 
 def _log_comb(n, k):
@@ -449,15 +446,11 @@ def compute_rdp_tree_restart(
     if steps < 0:
       raise ValueError(f"Steps must be non-negative, got {steps_list}")
 
-  if np.isscalar(orders):
-    rdp = _compute_rdp_tree_restart(noise_multiplier, steps_list, orders)
-  else:
-    rdp = np.array([
-        _compute_rdp_tree_restart(noise_multiplier, steps_list, alpha)
-        for alpha in orders
-    ])
-
-  return rdp
+  return (_compute_rdp_tree_restart(noise_multiplier, steps_list, orders)
+          if np.isscalar(orders) else np.array([
+              _compute_rdp_tree_restart(noise_multiplier, steps_list, alpha)
+              for alpha in orders
+          ]))
 
 
 def compute_rdp_sample_without_replacement(q, noise_multiplier, steps, orders):
@@ -522,16 +515,15 @@ def _compute_rdp_sample_without_replacement_scalar(q, sigma, alpha):
   if float(alpha).is_integer():
     return _compute_rdp_sample_without_replacement_int(q, sigma, alpha) / (
         alpha - 1)
-  else:
-    # When alpha not an integer, we apply Corollary 10 of [WBK19] to interpolate
-    # the CGF and obtain an upper bound
-    alpha_f = math.floor(alpha)
-    alpha_c = math.ceil(alpha)
+  # When alpha not an integer, we apply Corollary 10 of [WBK19] to interpolate
+  # the CGF and obtain an upper bound
+  alpha_f = math.floor(alpha)
+  alpha_c = math.ceil(alpha)
 
-    x = _compute_rdp_sample_without_replacement_int(q, sigma, alpha_f)
-    y = _compute_rdp_sample_without_replacement_int(q, sigma, alpha_c)
-    t = alpha - alpha_f
-    return ((1 - t) * x + t * y) / (alpha - 1)
+  x = _compute_rdp_sample_without_replacement_int(q, sigma, alpha_f)
+  y = _compute_rdp_sample_without_replacement_int(q, sigma, alpha_c)
+  t = alpha - alpha_f
+  return ((1 - t) * x + t * y) / (alpha - 1)
 
 
 def _compute_rdp_sample_without_replacement_int(q, sigma, alpha):
@@ -621,12 +613,9 @@ def compute_heterogeneous_rdp(sampling_probabilities, noise_multipliers,
   """
   assert len(sampling_probabilities) == len(noise_multipliers)
 
-  rdp = 0
-  for q, noise_multiplier, steps in zip(sampling_probabilities,
-                                        noise_multipliers, steps_list):
-    rdp += compute_rdp(q, noise_multiplier, steps, orders)
-
-  return rdp
+  return sum(
+      compute_rdp(q, noise_multiplier, steps, orders) for q, noise_multiplier,
+      steps in zip(sampling_probabilities, noise_multipliers, steps_list))
 
 
 def get_privacy_spent(orders, rdp, target_eps=None, target_delta=None):

@@ -99,10 +99,11 @@ class DistributedDiscreteGaussianSumQuery(dp_query.SumAggregationDPQuery):
             message=f'Global L2 norm exceeds {params.l2_norm_bound}.')
     ]
     with tf.control_dependencies(dependencies):
-      result = tf.cond(
-          tf.equal(params.local_stddev, 0), lambda: record,
-          lambda: self._add_local_noise(record, params.local_stddev))
-      return result
+      return tf.cond(
+          tf.equal(params.local_stddev, 0),
+          lambda: record,
+          lambda: self._add_local_noise(record, params.local_stddev),
+      )
 
   def get_noised_result(self, sample_state, global_state):
     # Note that by directly returning the aggregate, this assumes that there

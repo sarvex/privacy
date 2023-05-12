@@ -41,9 +41,9 @@ def apply_dp_sgd_analysis(q, sigma, steps, orders, delta):
         ' over {} steps satisfies'.format(100 * q, sigma, steps), end=' ')
   print('differential privacy with eps = {:.3g} and delta = {}.'.format(
       eps, delta))
-  print('The optimal RDP order is {}.'.format(opt_order))
+  print(f'The optimal RDP order is {opt_order}.')
 
-  if opt_order == max(orders) or opt_order == min(orders):
+  if opt_order in [max(orders), min(orders)]:
     print('The privacy estimate is likely to be improved by expanding '
           'the set of orders.')
 

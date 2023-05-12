@@ -90,20 +90,17 @@ class DiscreteGaussianUtilsTest(tf.test.TestCase, parameterized.TestCase):
   def test_kl_divergence(self, num_samples, kl_tolerance):
     """Compute KL divergence betwen empirical & true distribution."""
     scale = 10
-    sq_sigma = scale * scale
+    sq_sigma = scale**2
     drawn_samples = discrete_gaussian_utils.sample_discrete_gaussian(
         scale=scale, shape=(num_samples,))
     drawn_samples = self.evaluate(drawn_samples)
     value_counts = collections.Counter(drawn_samples)
 
-    kl = 0
     norm_const = dgauss_normalizing_constant(sq_sigma)
 
-    for value, count in value_counts.items():
-      kl += count * (
-          math.log(count * norm_const / num_samples) + value * value /
-          (2.0 * sq_sigma))
-
+    kl = sum(count *
+             (math.log(count * norm_const / num_samples) + value * value /
+              (2.0 * sq_sigma)) for value, count in value_counts.items())
     kl /= num_samples
     self.assertLess(kl, kl_tolerance)
 
@@ -192,8 +189,8 @@ def exact_sampler(scale, num_samples, seed=EXACT_SAMPLER_SEED):
     assert x >= 0
     a = 0  # maintain a^2<=x.
     b = 1  # maintain b^2>x.
-    while b * b <= x:
-      b = 2 * b
+    while b**2 <= x:
+      b *= 2
     # Do binary search.
     while a + 1 < b:
       c = (a + b) // 2
@@ -246,18 +243,14 @@ def dgauss_normalizing_constant(sigma_sq):
   poisson = None
   if sigma_sq <= 1:
     original = 0
-    x = 1000
-    while x > 0:
+    for x in range(1000, 0, -1):
       original = original + math.exp(-x * x / (2.0 * sigma_sq))
-      x = x - 1
     original = 2 * original + 1
 
-  if sigma_sq * 100 >= 1:
+  if sigma_sq >= 1 / 100:
     poisson = 0
-    y = 1000
-    while y > 0:
+    for y in range(1000, 0, -1):
       poisson = poisson + math.exp(-math.pi * math.pi * sigma_sq * 2 * y * y)
-      y = y - 1
     poisson = math.sqrt(2 * math.pi * sigma_sq) * (1 + 2 * poisson)
 
   if poisson is None:

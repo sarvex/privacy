@@ -19,7 +19,9 @@ import tensorflow as tf
 def make_dp_model_class(cls):
   """Given a subclass of `tf.keras.Model`, returns a DP-SGD version of it."""
 
-  class DPModelClass(cls):  # pylint: disable=empty-docstring
+
+
+  class DPModelClass(cls):# pylint: disable=empty-docstring
     __doc__ = ("""DP subclass of `{base_model}`.
 
        This can be used as a differentially private replacement for
@@ -53,9 +55,11 @@ def make_dp_model_class(cls):
        model.fit(train_data, train_labels, epochs=1, batch_size=32)
        ```
 
-       """).format(base_model='tf.keras.' + cls.__name__,
-                   short_base_model=cls.__name__,
-                   dp_model_class='DP' + cls.__name__)
+       """).format(
+        base_model=f'tf.keras.{cls.__name__}',
+        short_base_model=cls.__name__,
+        dp_model_class=f'DP{cls.__name__}',
+    )
 
     def __init__(
         self,
@@ -125,6 +129,7 @@ def make_dp_model_class(cls):
       self.optimizer.apply_gradients(zip(grads, self.trainable_variables))
       self.compiled_metrics.update_state(y, y_pred)
       return {m.name: m.result() for m in self.metrics}
+
 
   return DPModelClass
 

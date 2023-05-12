@@ -43,7 +43,7 @@ from tensorflow_privacy.privacy.privacy_tests.membership_inference_attack.models
 def _is_iterator(obj, obj_name):
   """Checks whether obj is a generator."""
   if obj is not None and not isinstance(obj, Iterator):
-    raise ValueError('%s should be a generator.' % obj_name)
+    raise ValueError(f'{obj_name} should be a generator.')
 
 
 @dataclass
@@ -87,14 +87,8 @@ class Seq2SeqAttackInputData:
         self.test_size is None):
       raise ValueError('vocab_size, train_size, test_size should all be set')
 
-    if self.vocab_size is not None and not int:
+    if not int:
       raise ValueError('vocab_size should be of integer type')
-
-    if self.train_size is not None and not int:
-      raise ValueError('train_size should be of integer type')
-
-    if self.test_size is not None and not int:
-      raise ValueError('test_size should be of integer type')
 
     _is_iterator(self.logits_train, 'logits_train')
     _is_iterator(self.logits_test, 'logits_test')
@@ -105,22 +99,21 @@ class Seq2SeqAttackInputData:
     """Returns the shapes of variables that are not None."""
     result = ['AttackInputData(']
 
-    if self.vocab_size is not None and self.train_size is not None:
-      result.append(
-          'logits_train with shape (%d, num_sequences, num_tokens, %d)' %
-          (self.train_size, self.vocab_size))
-      result.append(
-          'labels_train with shape (%d, num_sequences, num_tokens, 1)' %
-          self.train_size)
-
-    if self.vocab_size is not None and self.test_size is not None:
-      result.append(
-          'logits_test with shape (%d, num_sequences, num_tokens, %d)' %
-          (self.test_size, self.vocab_size))
-      result.append(
-          'labels_test with shape (%d, num_sequences, num_tokens, 1)' %
-          self.test_size)
-
+    if self.vocab_size is not None:
+      if self.train_size is not None:
+        result.extend((
+            'logits_train with shape (%d, num_sequences, num_tokens, %d)' %
+            (self.train_size, self.vocab_size),
+            'labels_train with shape (%d, num_sequences, num_tokens, 1)' %
+            self.train_size,
+        ))
+      if self.test_size is not None:
+        result.extend((
+            'logits_test with shape (%d, num_sequences, num_tokens, %d)' %
+            (self.test_size, self.vocab_size),
+            'labels_test with shape (%d, num_sequences, num_tokens, 1)' %
+            self.test_size,
+        ))
     result.append(')')
     return '\n'.join(result)
 

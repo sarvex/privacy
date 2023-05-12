@@ -80,10 +80,7 @@ class GaussianQueryTest(tf.test.TestCase, parameterized.TestCase):
       query = gaussian_query.GaussianSumQuery(l2_norm_clip=5.0, stddev=stddev)
       query_result, _ = test_utils.run_query(query, [record1, record2])
 
-      noised_sums = []
-      for _ in xrange(1000):
-        noised_sums.append(sess.run(query_result))
-
+      noised_sums = [sess.run(query_result) for _ in xrange(1000)]
       result_stddev = np.std(noised_sums)
       self.assertNear(result_stddev, stddev, 0.1)
 

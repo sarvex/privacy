@@ -107,25 +107,23 @@ def get_single_slice_specs(slicing_spec: SlicingSpec,
       assert 0 <= num_classes <= 1000, (
           f"Too much classes for slicing by classes. "
           f"Found {num_classes}.")
-      for c in range(num_classes):
-        result.append(SingleSliceSpec(SlicingFeature.CLASS, c))
+      result.extend(
+          SingleSliceSpec(SlicingFeature.CLASS, c) for c in range(num_classes))
   elif isinstance(by_class, int):
     result.append(SingleSliceSpec(SlicingFeature.CLASS, by_class))
   elif isinstance(by_class, collections.Iterable):
-    for c in by_class:
-      result.append(SingleSliceSpec(SlicingFeature.CLASS, c))
-
+    result.extend(SingleSliceSpec(SlicingFeature.CLASS, c) for c in by_class)
   # Create slices by percentiles
   if slicing_spec.by_percentiles:
-    for percent in range(0, 100, 10):
-      result.append(
-          SingleSliceSpec(SlicingFeature.PERCENTILE, (percent, percent + 10)))
-
+    result.extend(
+        SingleSliceSpec(SlicingFeature.PERCENTILE, (percent, percent + 10))
+        for percent in range(0, 100, 10))
   # Create slices by correctness of the classifications.
   if slicing_spec.by_classification_correctness:
-    result.append(SingleSliceSpec(SlicingFeature.CORRECTLY_CLASSIFIED, True))
-    result.append(SingleSliceSpec(SlicingFeature.CORRECTLY_CLASSIFIED, False))
-
+    result.extend((
+        SingleSliceSpec(SlicingFeature.CORRECTLY_CLASSIFIED, True),
+        SingleSliceSpec(SlicingFeature.CORRECTLY_CLASSIFIED, False),
+    ))
   return result
 
 
@@ -142,7 +140,7 @@ def get_slice(data: AttackInputData,
   elif slice_spec.feature == SlicingFeature.CORRECTLY_CLASSIFIED:
     data_slice = _slice_by_classification_correctness(data, slice_spec.value)
   else:
-    raise ValueError('Unknown slice spec feature "%s"' % slice_spec.feature)
+    raise ValueError(f'Unknown slice spec feature "{slice_spec.feature}"')
 
   data_slice.slice_spec = slice_spec
   return data_slice

@@ -46,7 +46,9 @@ def make_vectorized_optimizer_class(cls):
         'make_optimizer_class() does not interfere with overridden version.',
         cls.__name__)
 
-  class DPOptimizerClass(cls):  # pylint: disable=empty-docstring
+
+
+  class DPOptimizerClass(cls):# pylint: disable=empty-docstring
     __doc__ = ("""Vectorized DP subclass of `{base_class}` using Gaussian
        averaging.
 
@@ -80,11 +82,11 @@ def make_vectorized_optimizer_class(cls):
        train_op = opt.minimize(loss, global_step=global_step)
        ```
        """).format(
-           base_class='tf.compat.v1.train.' + cls.__name__,
-           dp_class='DP' +
-           cls.__name__.replace('Optimizer', 'GaussianOptimizer'),
-           short_base_class=cls.__name__,
-           dp_vectorized_class='VectorizedDP' + cls.__name__)
+        base_class=f'tf.compat.v1.train.{cls.__name__}',
+        dp_class='DP' + cls.__name__.replace('Optimizer', 'GaussianOptimizer'),
+        short_base_class=cls.__name__,
+        dp_vectorized_class=f'VectorizedDP{cls.__name__}',
+    )
 
     def __init__(
         self,
@@ -110,79 +112,79 @@ def make_vectorized_optimizer_class(cls):
       self._num_microbatches = num_microbatches
 
     def compute_gradients(self,
-                          loss,
-                          var_list,
-                          gate_gradients=GATE_OP,
-                          aggregation_method=None,
-                          colocate_gradients_with_ops=False,
-                          grad_loss=None,
-                          gradient_tape=None):
+                              loss,
+                              var_list,
+                              gate_gradients=GATE_OP,
+                              aggregation_method=None,
+                              colocate_gradients_with_ops=False,
+                              grad_loss=None,
+                              gradient_tape=None):
       """DP-SGD version of base class method."""
       if callable(loss):
         # TF is running in Eager mode
         raise NotImplementedError('Vectorized optimizer unavailable for TF2.')
-      else:
-        # TF is running in graph mode, check we did not receive a gradient tape.
-        if gradient_tape:
-          raise ValueError('When in graph mode, a tape should not be passed.')
+      # TF is running in graph mode, check we did not receive a gradient tape.
+      if gradient_tape:
+        raise ValueError('When in graph mode, a tape should not be passed.')
 
-        batch_size = tf.shape(input=loss)[0]
-        if self._num_microbatches is None:
-          self._num_microbatches = batch_size
+      batch_size = tf.shape(input=loss)[0]
+      if self._num_microbatches is None:
+        self._num_microbatches = batch_size
 
-        # Note: it would be closer to the correct i.i.d. sampling of records if
-        # we sampled each microbatch from the appropriate binomial distribution,
-        # although that still wouldn't be quite correct because it would be
-        # sampling from the dataset without replacement.
-        microbatch_losses = tf.reshape(loss, [self._num_microbatches, -1])
+      # Note: it would be closer to the correct i.i.d. sampling of records if
+      # we sampled each microbatch from the appropriate binomial distribution,
+      # although that still wouldn't be quite correct because it would be
+      # sampling from the dataset without replacement.
+      microbatch_losses = tf.reshape(loss, [self._num_microbatches, -1])
 
-        if var_list is None:
-          var_list = (
-              tf.trainable_variables() + tf.get_collection(
-                  tf.GraphKeys.TRAINABLE_RESOURCE_VARIABLES))
+      if var_list is None:
+        var_list = (
+            tf.trainable_variables() + tf.get_collection(
+                tf.GraphKeys.TRAINABLE_RESOURCE_VARIABLES))
 
-        def process_microbatch(microbatch_loss):
-          """Compute clipped grads for one microbatch."""
-          microbatch_loss = tf.reduce_mean(input_tensor=microbatch_loss)
-          grads, _ = zip(*super(DPOptimizerClass, self).compute_gradients(
-              microbatch_loss,
-              var_list,
-              gate_gradients,
-              aggregation_method,
-              colocate_gradients_with_ops,
-              grad_loss))
-          grads_list = [
-              g if g is not None else tf.zeros_like(v)
-              for (g, v) in zip(list(grads), var_list)
-          ]
-          # Clip gradients to have L2 norm of l2_norm_clip.
-          # Here, we use TF primitives rather than the built-in
-          # tf.clip_by_global_norm() so that operations can be vectorized
-          # across microbatches.
-          grads_flat = tf.nest.flatten(grads_list)
-          squared_l2_norms = [
-              tf.reduce_sum(input_tensor=tf.square(g)) for g in grads_flat
-          ]
-          global_norm = tf.sqrt(tf.add_n(squared_l2_norms))
-          div = tf.maximum(global_norm / self._l2_norm_clip, 1.)
-          clipped_flat = [g / div for g in grads_flat]
-          clipped_grads = tf.nest.pack_sequence_as(grads_list, clipped_flat)
-          return clipped_grads
+      def process_microbatch(microbatch_loss):
+        """Compute clipped grads for one microbatch."""
+        microbatch_loss = tf.reduce_mean(input_tensor=microbatch_loss)
+        grads, _ = zip(*super(DPOptimizerClass, self).compute_gradients(
+            microbatch_loss,
+            var_list,
+            gate_gradients,
+            aggregation_method,
+            colocate_gradients_with_ops,
+            grad_loss))
+        grads_list = [
+            g if g is not None else tf.zeros_like(v)
+            for (g, v) in zip(list(grads), var_list)
+        ]
+        # Clip gradients to have L2 norm of l2_norm_clip.
+        # Here, we use TF primitives rather than the built-in
+        # tf.clip_by_global_norm() so that operations can be vectorized
+        # across microbatches.
+        grads_flat = tf.nest.flatten(grads_list)
+        squared_l2_norms = [
+            tf.reduce_sum(input_tensor=tf.square(g)) for g in grads_flat
+        ]
+        global_norm = tf.sqrt(tf.add_n(squared_l2_norms))
+        div = tf.maximum(global_norm / self._l2_norm_clip, 1.)
+        clipped_flat = [g / div for g in grads_flat]
+        clipped_grads = tf.nest.pack_sequence_as(grads_list, clipped_flat)
+        return clipped_grads
 
-        clipped_grads = tf.vectorized_map(process_microbatch, microbatch_losses)
+      clipped_grads = tf.vectorized_map(process_microbatch, microbatch_losses)
 
-        def reduce_noise_normalize_batch(stacked_grads):
-          summed_grads = tf.reduce_sum(input_tensor=stacked_grads, axis=0)
-          noise_stddev = self._l2_norm_clip * self._noise_multiplier
-          noise = tf.random.normal(
-              tf.shape(input=summed_grads), stddev=noise_stddev)
-          noised_grads = summed_grads + noise
-          return noised_grads / tf.cast(self._num_microbatches, tf.float32)
+      def reduce_noise_normalize_batch(stacked_grads):
+        summed_grads = tf.reduce_sum(input_tensor=stacked_grads, axis=0)
+        noise_stddev = self._l2_norm_clip * self._noise_multiplier
+        noise = tf.random.normal(
+            tf.shape(input=summed_grads), stddev=noise_stddev)
+        noised_grads = summed_grads + noise
+        return noised_grads / tf.cast(self._num_microbatches, tf.float32)
 
-        final_grads = tf.nest.map_structure(reduce_noise_normalize_batch,
-                                            clipped_grads)
+      final_grads = tf.nest.map_structure(reduce_noise_normalize_batch,
+                                          clipped_grads)
 
-        return list(zip(final_grads, var_list))
+      return list(zip(final_grads, var_list))
+
 
   return DPOptimizerClass
 

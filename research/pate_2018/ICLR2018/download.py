@@ -28,9 +28,9 @@ DATA_DIR = 'data/'
 
 
 def download():
-  print('Downloading ' + FILE_URI)
+  print(f'Downloading {FILE_URI}')
   tar_filename, _ = urllib.request.urlretrieve(FILE_URI)
-  print('Unpacking ' + tar_filename)
+  print(f'Unpacking {tar_filename}')
   with tarfile.open(tar_filename, "r:gz") as tar:
     tar.extractall(DATA_DIR)
   print('Done!')
@@ -38,6 +38,6 @@ def download():
 
 if __name__ == '__main__':
   if not os.path.exists(DATA_DIR):
-    print('Data directory does not exist. Creating ' + DATA_DIR)
+    print(f'Data directory does not exist. Creating {DATA_DIR}')
     os.makedirs(DATA_DIR)
   download()

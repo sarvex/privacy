@@ -156,7 +156,7 @@ class Seq2SeqTrainedAttackerTest(absltest.TestCase):
     self.assertLen(attacker_data.features_train, 3)
     self.assertLen(attacker_data.features_test, 2)
 
-    for _, feature in enumerate(attacker_data.features_train):
+    for feature in attacker_data.features_train:
       self.assertLen(feature, 1)  # each feature has one average rank
 
     # Tests that fields of PrivacyReportMetadata are populated.
@@ -231,7 +231,7 @@ class Seq2SeqTrainedAttackerTest(absltest.TestCase):
     self.assertLen(attacker_data.features_train, 4)
     self.assertLen(attacker_data.features_test, 2)
 
-    for _, feature in enumerate(attacker_data.features_train):
+    for feature in attacker_data.features_train:
       self.assertLen(feature, 1)  # each feature has one average rank
 
     # Tests that fields of PrivacyReportMetadata are populated.

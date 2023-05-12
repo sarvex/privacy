@@ -62,7 +62,7 @@ class SingleSliceSpec:
     if self.feature == SlicingFeature.PERCENTILE:
       return 'Loss percentiles: %d-%d' % self.value
 
-    return '%s=%s' % (self.feature.name, self.value)
+    return f'{self.feature.name}={self.value}'
 
 
 @dataclasses.dataclass
@@ -95,7 +95,7 @@ class SlicingSpec:
       result.append(' Entire dataset,')
     if self.by_class:
       if isinstance(self.by_class, Iterable):
-        result.append(' Into classes %s,' % self.by_class)
+        result.append(f' Into classes {self.by_class},')
       elif isinstance(self.by_class, int):
         result.append(' Up to class %d,' % self.by_class)
       else:
@@ -120,12 +120,14 @@ class AttackType(enum.Enum):
   @property
   def is_trained_attack(self):
     """Returns whether this type of attack requires training a model."""
-    return (self != AttackType.THRESHOLD_ATTACK) and (
-        self != AttackType.THRESHOLD_ENTROPY_ATTACK)
+    return self not in [
+        AttackType.THRESHOLD_ATTACK,
+        AttackType.THRESHOLD_ENTROPY_ATTACK,
+    ]
 
   def __str__(self):
     """Returns LOGISTIC_REGRESSION instead of AttackType.LOGISTIC_REGRESSION."""
-    return '%s' % self.name
+    return f'{self.name}'
 
 
 class PrivacyMetric(enum.Enum):
@@ -135,7 +137,7 @@ class PrivacyMetric(enum.Enum):
 
   def __str__(self):
     """Returns 'AUC' instead of PrivacyMetric.AUC."""
-    return '%s' % self.value
+    return f'{self.value}'
 
 
 def _is_integer_type_array(a):
@@ -145,20 +147,21 @@ def _is_integer_type_array(a):
 def _is_last_dim_equal(arr1, arr1_name, arr2, arr2_name):
   """Checks whether the last dimension of the arrays is the same."""
   if arr1 is not None and arr2 is not None and arr1.shape[-1] != arr2.shape[-1]:
-    raise ValueError('%s and %s should have the same number of features.' %
-                     (arr1_name, arr2_name))
+    raise ValueError(
+        f'{arr1_name} and {arr2_name} should have the same number of features.'
+    )
 
 
 def _is_array_one_dimensional(arr, arr_name):
   """Checks whether the array is one dimensional."""
   if arr is not None and len(arr.shape) != 1:
-    raise ValueError('%s should be a one dimensional numpy array.' % arr_name)
+    raise ValueError(f'{arr_name} should be a one dimensional numpy array.')
 
 
 def _is_np_array(arr, arr_name):
   """Checks whether array is a numpy array."""
   if arr is not None and not isinstance(arr, np.ndarray):
-    raise ValueError('%s should be a numpy array.' % arr_name)
+    raise ValueError(f'{arr_name} should be a numpy array.')
 
 
 def _log_value(probs, small_value=1e-30):
@@ -208,16 +211,12 @@ class AttackInputData:
   @property
   def logits_or_probs_train(self):
     """Returns train logits or probs whatever is not None."""
-    if self.logits_train is not None:
-      return self.logits_train
-    return self.probs_train
+    return self.logits_train if self.logits_train is not None else self.probs_train
 
   @property
   def logits_or_probs_test(self):
     """Returns test logits or probs whatever is not None."""
-    if self.logits_test is not None:
-      return self.logits_test
-    return self.probs_test
+    return self.logits_test if self.logits_test is not None else self.probs_test
 
   @staticmethod
   def _get_entropy(logits: np.ndarray, true_labels: np.ndarray):
@@ -232,22 +231,21 @@ class AttackInputData:
       # normal prediction entropy.
       # See the Equation (7) in https://arxiv.org/pdf/2003.10595.pdf
       return np.sum(np.multiply(probs, _log_value(probs)), axis=1)
-    else:
-      # When given the ground truth label, we compute the
-      # modified prediction entropy.
-      # See the Equation (8) in https://arxiv.org/pdf/2003.10595.pdf
-      log_probs = _log_value(probs)
-      reverse_probs = 1 - probs
-      log_reverse_probs = _log_value(reverse_probs)
-      modified_probs = np.copy(probs)
-      modified_probs[range(true_labels.size),
-                     true_labels] = reverse_probs[range(true_labels.size),
-                                                  true_labels]
-      modified_log_probs = np.copy(log_reverse_probs)
-      modified_log_probs[range(true_labels.size),
-                         true_labels] = log_probs[range(true_labels.size),
-                                                  true_labels]
-      return np.sum(np.multiply(modified_probs, modified_log_probs), axis=1)
+    # When given the ground truth label, we compute the
+    # modified prediction entropy.
+    # See the Equation (8) in https://arxiv.org/pdf/2003.10595.pdf
+    log_probs = _log_value(probs)
+    reverse_probs = 1 - probs
+    log_reverse_probs = _log_value(reverse_probs)
+    modified_probs = np.copy(probs)
+    modified_probs[range(true_labels.size),
+                   true_labels] = reverse_probs[range(true_labels.size),
+                                                true_labels]
+    modified_log_probs = np.copy(log_reverse_probs)
+    modified_log_probs[range(true_labels.size),
+                       true_labels] = log_probs[range(true_labels.size),
+                                                true_labels]
+    return np.sum(np.multiply(modified_probs, modified_log_probs), axis=1)
 
   def get_loss_train(self):
     """Calculates (if needed) cross-entropy losses for the training set.
@@ -258,11 +256,11 @@ class AttackInputData:
     if self.loss_train is None:
       if self.labels_train is None:
         return None
-      if self.logits_train is not None:
-        self.loss_train = utils.log_loss_from_logits(self.labels_train,
-                                                     self.logits_train)
       else:
-        self.loss_train = utils.log_loss(self.labels_train, self.probs_train)
+        self.loss_train = (utils.log_loss_from_logits(self.labels_train,
+                                                      self.logits_train)
+                           if self.logits_train is not None else utils.log_loss(
+                               self.labels_train, self.probs_train))
     return self.loss_train
 
   def get_loss_test(self):
@@ -274,11 +272,10 @@ class AttackInputData:
     if self.loss_test is None:
       if self.labels_test is None:
         return None
-      if self.logits_test is not None:
-        self.loss_test = utils.log_loss_from_logits(self.labels_test,
-                                                    self.logits_test)
       else:
-        self.loss_test = utils.log_loss(self.labels_test, self.probs_test)
+        self.loss_test = (utils.log_loss_from_logits(
+            self.labels_test, self.logits_test) if self.logits_test is not None
+                          else utils.log_loss(self.labels_test, self.probs_test))
     return self.loss_test
 
   def get_entropy_train(self):
@@ -390,7 +387,7 @@ class AttackInputData:
 
 def _append_array_shape(arr: np.array, arr_name: str, result):
   if arr is not None:
-    result.append(' %s with shape: %s,' % (arr_name, arr.shape))
+    result.append(f' {arr_name} with shape: {arr.shape},')
 
 
 @dataclasses.dataclass
@@ -482,12 +479,13 @@ class SingleAttackResult:
     """Returns SliceSpec, AttackType, AUC and advantage metrics."""
     return '\n'.join([
         'SingleAttackResult(',
-        '  SliceSpec: %s' % str(self.slice_spec),
-        '  DataSize: (ntrain=%d, ntest=%d)' % (self.data_size.ntrain,
-                                               self.data_size.ntest),
-        '  AttackType: %s' % str(self.attack_type),
+        f'  SliceSpec: {str(self.slice_spec)}',
+        '  DataSize: (ntrain=%d, ntest=%d)' %
+        (self.data_size.ntrain, self.data_size.ntest),
+        f'  AttackType: {str(self.attack_type)}',
         '  AUC: %.2f' % self.get_auc(),
-        '  Attacker advantage: %.2f' % self.get_attacker_advantage(), ')'
+        '  Attacker advantage: %.2f' % self.get_attacker_advantage(),
+        ')',
     ])
 
 
@@ -558,13 +556,12 @@ class SingleMembershipProbabilityResult:
     """
     meaningful_threshold_list, precision_list, recall_list = self.attack_with_varied_thresholds(
         threshold_list)
-    summary = []
-    summary.append('\nMembership probability analysis over slice: \"%s\"' %
-                   str(self.slice_spec))
-    for i in range(len(meaningful_threshold_list)):
-      summary.append(
-          '  with %.4f as the threshold on membership probability, the precision-recall pair is (%.4f, %.4f)'
-          % (meaningful_threshold_list[i], precision_list[i], recall_list[i]))
+    summary = [('\nMembership probability analysis over slice: \"%s\"' %
+                str(self.slice_spec))]
+    summary.extend(
+        '  with %.4f as the threshold on membership probability, the precision-recall pair is (%.4f, %.4f)'
+        % (meaningful_threshold_list[i], precision_list[i], recall_list[i])
+        for i in range(len(meaningful_threshold_list)))
     if return_roc_results:
       fpr, tpr, thresholds = metrics.roc_curve(
           np.concatenate((np.ones(len(self.train_membership_probs)),
@@ -572,12 +569,12 @@ class SingleMembershipProbabilityResult:
           np.concatenate(
               (self.train_membership_probs, self.test_membership_probs)))
       roc_curve = RocCurve(tpr=tpr, fpr=fpr, thresholds=thresholds)
-      summary.append(
+      summary.extend((
           '  thresholding on membership probability achieved an AUC of %.2f' %
-          (roc_curve.get_auc()))
-      summary.append(
+          (roc_curve.get_auc()),
           '  thresholding on membership probability achieved an advantage of %.2f'
-          % (roc_curve.get_attacker_advantage()))
+          % (roc_curve.get_attacker_advantage()),
+      ))
     return summary
 
 
@@ -622,7 +619,7 @@ class AttackResultsDFColumns(enum.Enum):
 
   def __str__(self):
     """Returns 'slice value' instead of AttackResultsDFColumns.SLICE_VALUE."""
-    return '%s' % self.value
+    return f'{self.value}'
 
 
 @dataclasses.dataclass
@@ -656,16 +653,15 @@ class AttackResults:
       advantages.append(float(attack_result.get_attacker_advantage()))
       aucs.append(float(attack_result.get_auc()))
 
-    df = pd.DataFrame({
+    return pd.DataFrame({
         str(AttackResultsDFColumns.SLICE_FEATURE): slice_features,
         str(AttackResultsDFColumns.SLICE_VALUE): slice_values,
         str(AttackResultsDFColumns.DATA_SIZE_TRAIN): data_size_train,
         str(AttackResultsDFColumns.DATA_SIZE_TEST): data_size_test,
         str(AttackResultsDFColumns.ATTACK_TYPE): attack_types,
         str(PrivacyMetric.ATTACKER_ADVANTAGE): advantages,
-        str(PrivacyMetric.AUC): aucs
+        str(PrivacyMetric.AUC): aucs,
     })
-    return df
 
   def summary(self, by_slices=False) -> str:
     """Provides a summary of the metrics.
@@ -678,19 +674,19 @@ class AttackResults:
     Returns:
       A string with a summary of all the metrics.
     """
-    summary = []
-
     # Summary over all slices
     max_auc_result_all = self.get_result_with_max_auc()
-    summary.append('Best-performing attacks over all slices')
-    summary.append(
+    summary = [
+        'Best-performing attacks over all slices',
         '  %s (with %d training and %d test examples) achieved an AUC of %.2f on slice %s'
-        % (max_auc_result_all.attack_type,
-           max_auc_result_all.data_size.ntrain,
-           max_auc_result_all.data_size.ntest,
-           max_auc_result_all.get_auc(),
-           max_auc_result_all.slice_spec))
-
+        % (
+            max_auc_result_all.attack_type,
+            max_auc_result_all.data_size.ntrain,
+            max_auc_result_all.data_size.ntest,
+            max_auc_result_all.get_auc(),
+            max_auc_result_all.slice_spec,
+        ),
+    ]
     max_advantage_result_all = self.get_result_with_max_attacker_advantage()
     summary.append(
         '  %s (with %d training and %d test examples) achieved an advantage of %.2f on slice %s'
@@ -782,7 +778,7 @@ class AttackResultsCollection:
   def load(cls, dirname):
     """Loads AttackResultsCollection from all files in a directory."""
     loaded_collection = AttackResultsCollection([])
-    for filepath in sorted(glob.glob('%s/*' % dirname)):
+    for filepath in sorted(glob.glob(f'{dirname}/*')):
       with open(filepath, 'rb') as inp:
         loaded_collection.attack_results_list.append(pickle.load(inp))
     return loaded_collection
@@ -792,9 +788,8 @@ def _get_attack_results_filename(attack_results: AttackResults, index: int):
   """Creates a filename for a specific set of AttackResults."""
   metadata = attack_results.privacy_report_metadata
   if metadata is not None:
-    return '%s_%s_epoch_%s.pickle' % (metadata.model_variant_label, index,
-                                      metadata.epoch_num)
-  return '%s.pickle' % index
+    return f'{metadata.model_variant_label}_{index}_epoch_{metadata.epoch_num}.pickle'
+  return f'{index}.pickle'
 
 
 def get_flattened_attack_metrics(results: AttackResults):

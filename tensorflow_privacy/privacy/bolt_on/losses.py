@@ -191,9 +191,7 @@ class StrongConvexHuber(losses.Loss, StrongConvexMixin):
     # if class_weight is provided,
     # it should be a vector of the same size of number of classes
     max_class_weight = self.max_class_weight(class_weight, self.dtype)
-    lc = self.C * max_class_weight + \
-         self.reg_lambda * self.radius()
-    return lc
+    return self.C * max_class_weight + self.reg_lambda * self.radius()
 
   def kernel_regularizer(self):
     """Return l2 loss using 0.5*reg_lambda as the l2 term (as desired).

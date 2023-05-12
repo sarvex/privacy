@@ -60,10 +60,10 @@ def _multi_class_head_with_softmax_cross_entropy_loss(
   if label_vocabulary is not None and not isinstance(label_vocabulary,
                                                      (list, tuple)):
     raise ValueError(
-        'label_vocabulary should be a list or a tuple. Given type: {}'.format(
-            type(label_vocabulary)))
+        f'label_vocabulary should be a list or a tuple. Given type: {type(label_vocabulary)}'
+    )
   if loss_reduction not in tf.compat.v1.losses.Reduction.all():
-    raise ValueError('Invalid loss_reduction: {}'.format(loss_reduction))
+    raise ValueError(f'Invalid loss_reduction: {loss_reduction}')
   if loss_fn:
     _validate_loss_fn_args(loss_fn)
   return _MultiClassHeadWithSoftmaxCrossEntropyLoss(
@@ -241,14 +241,14 @@ def _binary_logistic_head_with_sigmoid_cross_entropy_loss(
   if label_vocabulary is not None and not isinstance(label_vocabulary,
                                                      (list, tuple)):
     raise TypeError(
-        'label_vocabulary should be a list or tuple. Given type: {}'.format(
-            type(label_vocabulary)))
+        f'label_vocabulary should be a list or tuple. Given type: {type(label_vocabulary)}'
+    )
 
   for threshold in thresholds:
     if (threshold <= 0.0) or (threshold >= 1.0):
-      raise ValueError('thresholds not in (0, 1): {}.'.format((thresholds,)))
+      raise ValueError(f'thresholds not in (0, 1): {(thresholds, )}.')
   if loss_reduction not in tf.compat.v1.losses.Reduction.all():
-    raise ValueError('Invalid loss_reduction: {}'.format(loss_reduction))
+    raise ValueError(f'Invalid loss_reduction: {loss_reduction}')
   if loss_fn:
     _validate_loss_fn_args(loss_fn)
   return _BinaryLogisticHeadWithSigmoidCrossEntropyLoss(
@@ -444,15 +444,13 @@ def _binary_logistic_or_multi_class_head(n_classes, weight_column,
   Returns:
     `head._Head` instance.
   """
-  if n_classes == 2:
-    head = _binary_logistic_head_with_sigmoid_cross_entropy_loss(
-        weight_column=weight_column,
-        label_vocabulary=label_vocabulary,
-        loss_reduction=loss_reduction)
-  else:
-    head = _multi_class_head_with_softmax_cross_entropy_loss(
-        n_classes,
-        weight_column=weight_column,
-        label_vocabulary=label_vocabulary,
-        loss_reduction=loss_reduction)
-  return head
+  return (_binary_logistic_head_with_sigmoid_cross_entropy_loss(
+      weight_column=weight_column,
+      label_vocabulary=label_vocabulary,
+      loss_reduction=loss_reduction,
+  ) if n_classes == 2 else _multi_class_head_with_softmax_cross_entropy_loss(
+      n_classes,
+      weight_column=weight_column,
+      label_vocabulary=label_vocabulary,
+      loss_reduction=loss_reduction,
+  ))

@@ -468,7 +468,7 @@ class BoltonOptimizerTest(keras_parameterized.TestCase):
       model = TestModel(1, (1,), 1)
       model.compile(bolton, loss)
       model.layers[0].kernel = \
-        model.layers[0].kernel_initializer((model.layer_input_shape[0],
+          model.layers[0].kernel_initializer((model.layer_input_shape[0],
                                             model.n_outputs))
       bolton._is_init = True  # pylint: disable=protected-access
       bolton.noise_distribution = 'laplace'
@@ -479,11 +479,9 @@ class BoltonOptimizerTest(keras_parameterized.TestCase):
       bolton.batch_size = 1
       bolton.n_outputs = 1
       res = getattr(bolton, fn, lambda: 'test')(*args)
-      if res != 'test':
-        res = 1
-      else:
-        res = 0
+      res = 1 if res != 'test' else 0
       return _ops.convert_to_tensor_v2(res, dtype=tf.float32)
+
     self.assertNotEqual(test_run(fn, args), 0)
 
   @parameterized.named_parameters([

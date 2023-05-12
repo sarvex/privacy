@@ -13,6 +13,7 @@
 # limitations under the License.
 """TensorFlow Privacy library."""
 
+
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -23,9 +24,7 @@ from tensorflow_privacy.version import __version__  # pylint: disable=g-bad-impo
 
 # pylint: disable=g-import-not-at-top
 
-if hasattr(sys, 'skip_tf_privacy_import'):  # Useful for standalone scripts.
-  pass
-else:
+if not hasattr(sys, 'skip_tf_privacy_import'):
   # TensorFlow v1 imports
   from tensorflow_privacy import v1
 

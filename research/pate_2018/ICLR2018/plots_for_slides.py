@@ -76,17 +76,19 @@ def plot_rdp_curve_per_example(votes, sigmas):
       ax.plot(
           orders,
           rdp,
-          alpha=1.,
-          label=r'Data-dependent bound, $\sigma$={}'.format(int(sigma)),
-          linewidth=5)
+          alpha=1.0,
+          label=f'Data-dependent bound, $\sigma$={int(sigma)}',
+          linewidth=5,
+      )
 
   for sigma in sigmas:
     ax.plot(
         orders,
         pate.rdp_data_independent_gaussian(sigma, orders),
-        alpha=.3,
-        label=r'Data-independent bound, $\sigma$={}'.format(int(sigma)),
-        linewidth=10)
+        alpha=0.3,
+        label=f'Data-independent bound, $\sigma$={int(sigma)}',
+        linewidth=10,
+    )
 
   plt.xlim(xmin=1, xmax=100)
   plt.ylim(ymin=0)
@@ -117,7 +119,7 @@ def plot_rdp_of_sigma(v, order):
   # plt.yticks([0, .0004, .0008, .0012])
   ax.tick_params(labelleft='off')
   plt.xlabel(r'Noise $\sigma$', fontsize=16)
-  plt.ylabel(r'RDP at order $\alpha={}$'.format(order), fontsize=16)
+  plt.ylabel(f'RDP at order $\alpha={order}$', fontsize=16)
   ax.tick_params(labelsize=14)
 
   # plt.legend(loc=0, fontsize=13)
@@ -137,10 +139,10 @@ def compute_rdp_curve(votes, threshold, sigma1, sigma2, orders,
 
     answered += q_step1
     if answered >= target_answered:
-      print('Processed {} queries to answer {}.'.format(i, target_answered))
+      print(f'Processed {i} queries to answer {target_answered}.')
       return rdp_cum
 
-  assert False, 'Never reached {} answered queries.'.format(target_answered)
+  assert False, f'Never reached {target_answered} answered queries.'
 
 
 def plot_rdp_total(votes, sigmas):
@@ -156,9 +158,10 @@ def plot_rdp_total(votes, sigmas):
     ax.plot(
         orders,
         rdp,
-        alpha=.8,
-        label=r'Data-dependent bound, $\sigma$={}'.format(int(sigma)),
-        linewidth=5)
+        alpha=0.8,
+        label=f'Data-dependent bound, $\sigma$={int(sigma)}',
+        linewidth=5,
+    )
 
   # for sigma in sigmas:
   #   ax.plot(
@@ -212,9 +215,10 @@ def plot_two_data_ind_curves():
     ax.plot(
         orders,
         pate.rdp_data_independent_gaussian(sigma, orders),
-        alpha=.3,
-        label=r'Data-independent bound, $\sigma$={}'.format(int(sigma)),
-        linewidth=10)
+        alpha=0.3,
+        label=f'Data-independent bound, $\sigma$={int(sigma)}',
+        linewidth=10,
+    )
 
   plt.xlim(xmin=1, xmax=100)
   plt.ylim(ymin=0)
@@ -232,17 +236,15 @@ def scatter_plot(votes, threshold, sigma1, sigma2, order):
   fig, ax = setup_plot()
   x = []
   y = []
-  for i, v in enumerate(votes):
-    if threshold is not None and sigma1 is not None:
-      q_step1 = math.exp(pate.compute_logpr_answered(threshold, sigma1, v))
-    else:
-      q_step1 = 1.
+  for v in votes:
+    q_step1 = (math.exp(pate.compute_logpr_answered(threshold, sigma1, v))
+               if threshold is not None and sigma1 is not None else 1.0)
     if random.random() < q_step1:
       logq_step2 = pate.compute_logq_gaussian(v, sigma2)
       x.append(max(v))
       y.append(pate.rdp_gaussian(logq_step2, sigma2, order))
 
-  print('Selected {} queries.'.format(len(x)))
+  print(f'Selected {len(x)} queries.')
   # Plot the data-independent curve:
   # data_ind = pate.rdp_data_independent_gaussian(sigma, order)
   # plt.plot([0, 5000], [data_ind, data_ind], color='tab:blue', linestyle='-', linewidth=2)
@@ -251,7 +253,7 @@ def scatter_plot(votes, threshold, sigma1, sigma2, order):
   plt.ylim(ymin=1e-300, ymax=1)
   plt.yticks([1, 1e-100, 1e-200, 1e-300])
   plt.scatter(x, y, s=1, alpha=0.5)
-  plt.ylabel(r'RDP at $\alpha={}$'.format(order), fontsize=16)
+  plt.ylabel(f'RDP at $\alpha={order}$', fontsize=16)
   plt.xlabel(r'max count', fontsize=16)
   ax.tick_params(labelsize=14)
   plt.show()
@@ -260,7 +262,7 @@ def scatter_plot(votes, threshold, sigma1, sigma2, order):
 def main(argv):
   del argv  # Unused.
   fin_name = os.path.expanduser(FLAGS.counts_file)
-  print('Reading raw votes from ' + fin_name)
+  print(f'Reading raw votes from {fin_name}')
   sys.stdout.flush()
 
   plot_data_ind_curve()

@@ -95,7 +95,7 @@ def main(argv):
   plt.ylabel(r'Privacy cost $\varepsilon$ at $\delta=10^{-8}$', fontsize=16)
   ax.tick_params(labelsize=14)
   fout_name = os.path.join(FLAGS.figures_dir, 'ls_of_q.pdf')
-  print('Saving the graph to ' + fout_name)
+  print(f'Saving the graph to {fout_name}')
   plt.show()
 
   plt.close('all')

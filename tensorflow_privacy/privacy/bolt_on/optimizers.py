@@ -263,9 +263,7 @@ class BoltOn(optimizer_v2.OptimizerV2):
       key: attribute name
       value: attribute value
     """
-    if key == '_private_attributes':
-      object.__setattr__(self, key, value)
-    elif key in self._private_attributes:
+    if key == '_private_attributes' or key in self._private_attributes:
       object.__setattr__(self, key, value)
     else:
       setattr(self._internal_optimizer, key, value)

@@ -68,27 +68,27 @@ def train_teacher(dataset, nb_teachers, teacher_id):
                                          nb_teachers,
                                          teacher_id)
 
-  print("Length of training data: " + str(len(labels)))
+  print(f"Length of training data: {len(labels)}")
 
   # Define teacher checkpoint filename and full path
   if FLAGS.deeper:
-    filename = str(nb_teachers) + '_teachers_' + str(teacher_id) + '_deep.ckpt'
+    filename = f'{str(nb_teachers)}_teachers_{str(teacher_id)}_deep.ckpt'
   else:
-    filename = str(nb_teachers) + '_teachers_' + str(teacher_id) + '.ckpt'
-  ckpt_path = FLAGS.train_dir + '/' + str(dataset) + '_' + filename
+    filename = f'{str(nb_teachers)}_teachers_{str(teacher_id)}.ckpt'
+  ckpt_path = f'{FLAGS.train_dir}/{str(dataset)}_{filename}'
 
   # Perform teacher training
   assert deep_cnn.train(data, labels, ckpt_path)
 
   # Append final step value to checkpoint for evaluation
-  ckpt_path_final = ckpt_path + '-' + str(FLAGS.max_steps - 1)
+  ckpt_path_final = f'{ckpt_path}-{str(FLAGS.max_steps - 1)}'
 
   # Retrieve teacher probability estimates on the test data
   teacher_preds = deep_cnn.softmax_preds(test_data, ckpt_path_final)
 
   # Compute teacher accuracy
   precision = metrics.accuracy(teacher_preds, test_labels)
-  print('Precision of teacher after training: ' + str(precision))
+  print(f'Precision of teacher after training: {str(precision)}')
 
   return True
 

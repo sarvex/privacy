@@ -56,7 +56,7 @@ flags.DEFINE_float('data_l2_norm', 8, 'Bound on the L2 norm of normalized data')
 
 def lr_model_fn(features, labels, mode, nclasses, dim):
   """Model function for logistic regression."""
-  input_layer = tf.reshape(features['x'], tuple([-1]) + dim)
+  input_layer = tf.reshape(features['x'], (-1, ) + dim)
   logits = tf.keras.layers.Dense(
       units=nclasses,
       kernel_regularizer=tf.keras.regularizers.L2(l2=FLAGS.regularizer),
@@ -153,7 +153,7 @@ def print_privacy_guarantees(epochs, batch_size, samples, noise_multiplier):
   print('In the conditions of Theorem 34 (https://arxiv.org/abs/1808.06651) '
         'the training procedure results in the following privacy guarantees.')
 
-  print('Out of the total of {} samples:'.format(samples))
+  print(f'Out of the total of {samples} samples:')
 
   steps_per_epoch = samples // batch_size
   orders = np.concatenate(

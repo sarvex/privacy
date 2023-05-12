@@ -71,15 +71,15 @@ def ensemble_preds(dataset, nb_teachers, stdnt_data):
   for teacher_id in xrange(nb_teachers):
     # Compute path of checkpoint file for teacher model with ID teacher_id
     if FLAGS.deeper:
-      ckpt_path = FLAGS.teachers_dir + '/' + str(dataset) + '_' + str(nb_teachers) + '_teachers_' + str(teacher_id) + '_deep.ckpt-' + str(FLAGS.teachers_max_steps - 1) #NOLINT(long-line)
+      ckpt_path = f'{FLAGS.teachers_dir}/{str(dataset)}_{str(nb_teachers)}_teachers_{str(teacher_id)}_deep.ckpt-{str(FLAGS.teachers_max_steps - 1)}'
     else:
-      ckpt_path = FLAGS.teachers_dir + '/' + str(dataset) + '_' + str(nb_teachers) + '_teachers_' + str(teacher_id) + '.ckpt-' + str(FLAGS.teachers_max_steps - 1)  # NOLINT(long-line)
+      ckpt_path = f'{FLAGS.teachers_dir}/{str(dataset)}_{str(nb_teachers)}_teachers_{str(teacher_id)}.ckpt-{str(FLAGS.teachers_max_steps - 1)}'
 
     # Get predictions on our training data and store in result array
     result[teacher_id] = deep_cnn.softmax_preds(stdnt_data, ckpt_path)
 
     # This can take a while when there are a lot of teachers so output status
-    print("Computed Teacher " + str(teacher_id) + " softmax predictions")
+    print(f"Computed Teacher {str(teacher_id)} softmax predictions")
 
   return result
 
@@ -127,10 +127,10 @@ def prepare_student_data(dataset, nb_teachers, save=False):
     stdnt_labels, clean_votes, labels_for_dump = aggregation.noisy_max(teachers_preds, FLAGS.lap_scale, return_clean_votes=True) #NOLINT(long-line)
 
     # Prepare filepath for numpy dump of clean votes
-    filepath = FLAGS.data_dir + "/" + str(dataset) + '_' + str(nb_teachers) + '_student_clean_votes_lap_' + str(FLAGS.lap_scale) + '.npy'  # NOLINT(long-line)
+    filepath = f"{FLAGS.data_dir}/{str(dataset)}_{str(nb_teachers)}_student_clean_votes_lap_{str(FLAGS.lap_scale)}.npy"
 
     # Prepare filepath for numpy dump of clean labels
-    filepath_labels = FLAGS.data_dir + "/" + str(dataset) + '_' + str(nb_teachers) + '_teachers_labels_lap_' + str(FLAGS.lap_scale) + '.npy'  # NOLINT(long-line)
+    filepath_labels = f"{FLAGS.data_dir}/{str(dataset)}_{str(nb_teachers)}_teachers_labels_lap_{str(FLAGS.lap_scale)}.npy"
 
     # Dump clean_votes array
     with tf.gfile.Open(filepath, mode='w') as file_obj:
@@ -142,7 +142,7 @@ def prepare_student_data(dataset, nb_teachers, save=False):
 
   # Print accuracy of aggregated labels
   ac_ag_labels = metrics.accuracy(stdnt_labels, test_labels[:FLAGS.stdnt_share])
-  print("Accuracy of the aggregated labels: " + str(ac_ag_labels))
+  print(f"Accuracy of the aggregated labels: {str(ac_ag_labels)}")
 
   # Store unused part of test set for use as a test set after student training
   stdnt_test_data = test_data[FLAGS.stdnt_share:]
@@ -150,7 +150,7 @@ def prepare_student_data(dataset, nb_teachers, save=False):
 
   if save:
     # Prepare filepath for numpy dump of labels produced by noisy aggregation
-    filepath = FLAGS.data_dir + "/" + str(dataset) + '_' + str(nb_teachers) + '_student_labels_lap_' + str(FLAGS.lap_scale) + '.npy' #NOLINT(long-line)
+    filepath = f"{FLAGS.data_dir}/{str(dataset)}_{str(nb_teachers)}_student_labels_lap_{str(FLAGS.lap_scale)}.npy"
 
     # Dump student noisy labels array
     with tf.gfile.Open(filepath, mode='w') as file_obj:
@@ -178,22 +178,22 @@ def train_student(dataset, nb_teachers):
 
   # Prepare checkpoint filename and path
   if FLAGS.deeper:
-    ckpt_path = FLAGS.train_dir + '/' + str(dataset) + '_' + str(nb_teachers) + '_student_deeper.ckpt' #NOLINT(long-line)
+    ckpt_path = f'{FLAGS.train_dir}/{str(dataset)}_{str(nb_teachers)}_student_deeper.ckpt'
   else:
-    ckpt_path = FLAGS.train_dir + '/' + str(dataset) + '_' + str(nb_teachers) + '_student.ckpt'  # NOLINT(long-line)
+    ckpt_path = f'{FLAGS.train_dir}/{str(dataset)}_{str(nb_teachers)}_student.ckpt'
 
   # Start student training
   assert deep_cnn.train(stdnt_data, stdnt_labels, ckpt_path)
 
   # Compute final checkpoint name for student (with max number of steps)
-  ckpt_path_final = ckpt_path + '-' + str(FLAGS.max_steps - 1)
+  ckpt_path_final = f'{ckpt_path}-{str(FLAGS.max_steps - 1)}'
 
   # Compute student label predictions on remaining chunk of test set
   student_preds = deep_cnn.softmax_preds(stdnt_test_data, ckpt_path_final)
 
   # Compute teacher accuracy
   precision = metrics.accuracy(student_preds, stdnt_test_labels)
-  print('Precision of student after training: ' + str(precision))
+  print(f'Precision of student after training: {str(precision)}')
 
   return True
 

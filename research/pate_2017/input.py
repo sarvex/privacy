@@ -61,7 +61,7 @@ def maybe_download(file_urls, directory):
 
     # Deduce local file url
     #filepath = os.path.join(directory, filename)
-    filepath = directory + '/' + filename
+    filepath = f'{directory}/{filename}'
 
     # Add to result list
     result.append(filepath)
@@ -137,9 +137,8 @@ def extract_svhn(local_url):
 
 def unpickle_cifar_dic(file_path):
   """Helper function: unpickles a dictionary (used for loading CIFAR)."""
-  file_obj = open(file_path, 'rb')
-  data_dict = pickle.load(file_obj)
-  file_obj.close()
+  with open(file_path, 'rb') as file_obj:
+    data_dict = pickle.load(file_obj)
   return data_dict['data'], data_dict['labels']
 
 
@@ -154,12 +153,9 @@ def extract_cifar10(local_url, data_dir):
                         '/cifar10_test.npy',
                         '/cifar10_test_labels.npy']
 
-  all_preprocessed = True
-  for file_name in preprocessed_files:
-    if not tf.gfile.Exists(data_dir + file_name):
-      all_preprocessed = False
-      break
-
+  all_preprocessed = all(
+      tf.gfile.Exists(data_dir + file_name)
+      for file_name in preprocessed_files)
   if all_preprocessed:
     # Reload pre-processed training data from numpy dumps
     with tf.gfile.Open(data_dir + preprocessed_files[0], mode='r') as file_obj:
@@ -176,17 +172,12 @@ def extract_cifar10(local_url, data_dir):
   else:
     # Do everything from scratch
     # Define lists of all files we should extract
-    train_files = ['data_batch_' + str(i) for i in xrange(1, 6)]
+    train_files = [f'data_batch_{str(i)}' for i in xrange(1, 6)]
     test_file = ['test_batch']
     cifar10_files = train_files + test_file
 
-    # Check if all files have already been extracted
-    need_to_unpack = False
-    for file_name in cifar10_files:
-      if not tf.gfile.Exists(file_name):
-        need_to_unpack = True
-        break
-
+    need_to_unpack = any(not tf.gfile.Exists(file_name)
+                         for file_name in cifar10_files)
     # We have to unpack the archive
     if need_to_unpack:
       tarfile.open(local_url, 'r:gz').extractall(data_dir)
@@ -196,7 +187,7 @@ def extract_cifar10(local_url, data_dir):
     labels = []
     for train_file in train_files:
       # Construct filename
-      filename = data_dir + '/cifar-10-batches-py/' + train_file
+      filename = f'{data_dir}/cifar-10-batches-py/{train_file}'
 
       # Unpickle dictionary and extract images and labels
       images_tmp, labels_tmp = unpickle_cifar_dic(filename)
@@ -216,7 +207,7 @@ def extract_cifar10(local_url, data_dir):
     np.save(data_dir + preprocessed_files[1], train_labels)
 
     # Construct filename for test file
-    filename = data_dir + '/cifar-10-batches-py/' + test_file[0]
+    filename = f'{data_dir}/cifar-10-batches-py/{test_file[0]}'
 
     # Load test images and labels
     test_data, test_images = unpickle_cifar_dic(filename)
@@ -240,7 +231,7 @@ def extract_mnist_data(filename, num_images, image_size, pixel_depth):
 
   Values are rescaled from [0, 255] down to [-0.5, 0.5].
   """
-  if not tf.gfile.Exists(filename+'.npy'):
+  if not tf.gfile.Exists(f'{filename}.npy'):
     with gzip.open(filename) as bytestream:
       bytestream.read(16)
       buf = bytestream.read(image_size * image_size * num_images)
@@ -250,7 +241,7 @@ def extract_mnist_data(filename, num_images, image_size, pixel_depth):
       np.save(filename, data)
       return data
   else:
-    with tf.gfile.Open(filename+'.npy', mode='rb') as file_obj:
+    with tf.gfile.Open(f'{filename}.npy', mode='rb') as file_obj:
       return np.load(file_obj)
 
 
@@ -258,7 +249,7 @@ def extract_mnist_labels(filename, num_images):
   """
   Extract the labels into a vector of int64 label IDs.
   """
-  if not tf.gfile.Exists(filename+'.npy'):
+  if not tf.gfile.Exists(f'{filename}.npy'):
     with gzip.open(filename) as bytestream:
       bytestream.read(8)
       buf = bytestream.read(1 * num_images)
@@ -266,7 +257,7 @@ def extract_mnist_labels(filename, num_images):
       np.save(filename, labels)
     return labels
   else:
-    with tf.gfile.Open(filename+'.npy', mode='rb') as file_obj:
+    with tf.gfile.Open(f'{filename}.npy', mode='rb') as file_obj:
       return np.load(file_obj)
 
 
@@ -303,16 +294,14 @@ def ld_svhn(extended=False, test_only=False):
 
   if test_only:
     return test_data, test_labels
-  else:
-    if extended:
-      # Stack train data with the extended training data
-      train_data = np.vstack((train_data, ext_data))
-      train_labels = np.hstack((train_labels, ext_labels))
+  if not extended:
+    # Return training and extended training data separately
+    return train_data, train_labels, test_data, test_labels, ext_data, ext_labels
+  # Stack train data with the extended training data
+  train_data = np.vstack((train_data, ext_data))
+  train_labels = np.hstack((train_labels, ext_labels))
 
-      return train_data, train_labels, test_data, test_labels
-    else:
-      # Return training and extended training data separately
-      return train_data, train_labels, test_data, test_labels, ext_data, ext_labels
+  return train_data, train_labels, test_data, test_labels
 
 
 def ld_cifar10(test_only=False):

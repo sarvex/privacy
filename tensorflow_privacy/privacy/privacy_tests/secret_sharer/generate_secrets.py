@@ -36,7 +36,7 @@ def generate_random_sequences(vocab: List[str], pattern: str, n: int,
     A list of different random sequences from the given vocabulary
   """
   def count_placeholder(pattern):
-    return sum([x[1] is not None for x in string.Formatter().parse(pattern)])
+    return sum(x[1] is not None for x in string.Formatter().parse(pattern))
 
   length = count_placeholder(pattern)
   np.random.seed(seed)

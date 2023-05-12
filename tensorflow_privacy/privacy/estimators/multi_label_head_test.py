@@ -57,10 +57,9 @@ class DPMultiLabelHeadTest(tf.test.TestCase):
     """Tests that an Estimator built with this head works."""
 
     train_features, train_labels = test_utils.make_multilabel_input_data(256)
-    feature_columns = []
-    for key in train_features:
-      feature_columns.append(tf.feature_column.numeric_column(key=key))
-
+    feature_columns = [
+        tf.feature_column.numeric_column(key=key) for key in train_features
+    ]
     head = multi_label_head.DPMultiLabelHead(3)
     optimizer = DPKerasSGDOptimizer(
         learning_rate=0.5,

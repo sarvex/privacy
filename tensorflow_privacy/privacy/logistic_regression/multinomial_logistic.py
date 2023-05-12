@@ -66,7 +66,7 @@ class KiferRegularizer(tf.keras.regularizers.Regularizer):
 
   def logistic_objective_perturbation_parameters(
       self, num_train: int, epsilon: float, delta: float, num_classes: int,
-      input_clipping_norm: float)-> Tuple[float, float]:
+      input_clipping_norm: float) -> Tuple[float, float]:
     """Computes l2-regularization coefficient and Gaussian noise variance.
 
       The setting is based on Algorithm 1 of Kifer et al.
@@ -85,7 +85,7 @@ class KiferRegularizer(tf.keras.regularizers.Regularizer):
     # zeta is an upper bound on the l2-norm of the loss function gradient.
     zeta = input_clipping_norm
     # variance is based on line 5 from Algorithm 1 of Kifer et al. (page 6):
-    variance = zeta*zeta*(8*np.log(2/delta)+4*epsilon)/(epsilon*epsilon)
+    variance = zeta**2 * (8*np.log(2/delta)+4*epsilon) / epsilon**2
     # lambda_coefficient is an upper bound on the spectral norm of the Hessian
     # of the loss function.
     lambda_coefficient = math.sqrt(2*num_classes)*(input_clipping_norm**2)/4
